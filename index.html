@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo-Baghdad: The Vertical Round City</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --neon-blue: #00f2ff; --neon-purple: #bc00ff; --gold: #d4af37; }
+        body { margin: 0; overflow: hidden; background: #020205; font-family: 'Cinzel', serif; }
+        #boot-sequence { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #020205; z-index: 100; transition: opacity 1.5s; color: white; text-align: center; }
+        .intro-slide { opacity: 0; position: absolute; transition: opacity 0.5s; display: none; flex-direction: column; align-items: center; }
+        .intro-slide.active { opacity: 1; display: flex; }
+        .intro-slide h1 { color: var(--neon-blue); letter-spacing: 15px; font-size: 3rem; text-shadow: 0 0 20px var(--neon-blue); }
+        .continue-btn { padding: 10px 25px; background: none; border: 1px solid var(--neon-blue); color: var(--neon-blue); cursor: pointer; margin-top: 20px; font-family: 'Cinzel'; }
+        #building-card { position: fixed; top: 20px; right: 20px; width: 320px; background: rgba(5, 5, 15, 0.9); border: 1px solid var(--neon-blue); color: white; padding: 25px; display: none; z-index: 50; backdrop-filter: blur(20px); box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); }
+        #close-card { position: absolute; top: 10px; right: 15px; color: var(--neon-blue); cursor: pointer; font-size: 1.5rem; }
+        #ui-layer { position: fixed; bottom: 20px; right: 20px; z-index: 10; }
+        .ui-btn { padding: 10px 18px; background: rgba(0,0,0,0.8); border: 1px solid var(--neon-purple); color: var(--neon-purple); text-decoration: none; font-size: 0.8rem; transition: 0.3s; }
+        .ui-btn:hover { background: var(--neon-purple); color: white; box-shadow: 0 0 15px var(--neon-purple); }
+    </style>
+</head>
+<body>
+    <div id="building-card"><div id="close-card">×</div><h2 id="card-title"></h2><p id="card-desc"></p></div>
+    <div id="boot-sequence">
+        <div class="intro-slide active">
+            <h1>NEO-BAGHDAD</h1>
+            <p>The Improved Round City of the Future</p>
+            <button class="continue-btn" onclick="nextSlide()">INITIALIZE SYSTEMS</button>
+        </div>
+        <div class="intro-slide">
+            <h1>ASCEND</h1>
+            <p>Architectural Core: <span style="color:var(--gold)">MATTEO-OS</span></p>
+            <button class="continue-btn" style="border-color:var(--neon-purple); color:var(--neon-purple);" onclick="startApp()">LAUNCH SIMULATION</button>
+        </div>
+    </div>
+    <div id="ui-layer"><a href="#" class="ui-btn">SYSTEM SCAN</a></div>
+    <audio id="bg-music" loop><source src="https://cdn.pixabay.com/audio/2021/11/23/audio_0399879743.mp3" type="audio/mpeg"></audio>
+
+    <script type="importmap"> { "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js" } } </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls, cityBody, palaceGroup, raycaster, mouse;
+        let trafficSystem = [];
+        const mosques = [], gates = [];
+        const mosqueNames = ["Al-Mansur Bio-Dome", "The Friday Nexus", "Turquoise Data-Sanctuary", "Al-Khulafa Uplink", "Scholars' Oratory 2.0"];
+        const mosqueLore = ["Atmospheric purification center.", "Central frequency synchronization hub.", "Quantum data storage facility.", "Long-range communication array.", "Neural-link educational library."];
+
+        window.nextSlide = () => {
+            const current = document.querySelector('.intro-slide.active');
+            current.classList.remove('active');
+            current.nextElementSibling.classList.add('active');
+        };
+
+        window.startApp = () => {
+            document.getElementById('bg-music').play().catch(() => {});
+            document.getElementById('boot-sequence').style.opacity = '0';
+            setTimeout(() => { document.getElementById('boot-sequence').remove(); init(); }, 1000);
+        };
+function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020205);
+            scene.fog = new THREE.FogExp2(0x020205, 0.00015);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 40000);
+            camera.position.set(2500, 1800, 2500);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.toneMapping = THREE.ReinhardToneMapping;
+            document.body.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+            sun.position.set(1000, 2000, 1000);
+            scene.add(sun, new THREE.AmbientLight(0x4040ff, 0.6));
+
+            createCity();
+            createTraffic();
+            window.addEventListener('click', onClick);
+            document.getElementById('close-card').onclick = () => document.getElementById('building-card').style.display = 'none';
+            animate();
+        }
+
+        function createCity() {
+            // Floor Grid
+            const grid = new THREE.GridHelper(10000, 50, 0x00f2ff, 0x002233);
+            scene.add(grid);
+
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 1, roughness: 0.1 });
+            const neonBlue = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
+            const neonPurple = new THREE.MeshBasicMaterial({ color: 0xbc00ff });
+
+            // Walls with Glow Rings
+            const addFuturisticWall = (r, h, w, mat) => {
+                const group = new THREE.Group();
+                const wall = new THREE.Mesh(new THREE.TorusGeometry(r, w, 16, 100), wallMat);
+                wall.rotation.x = Math.PI / 2;
+                const glow = new THREE.Mesh(new THREE.TorusGeometry(r + 2, 2, 8, 100), mat);
+                glow.rotation.x = Math.PI / 2;
+                glow.position.y = h;
+                group.add(wall, glow);
+                scene.add(group);
+            };
+            addFuturisticWall(1600, 150, 20, neonBlue);
+            addFuturisticWall(700, 200, 15, neonPurple);
+
+            // Future Mosques
+            for (let i = 0; i < 5; i++) {
+                const a = (i / 5) * Math.PI * 2, r = 900 + Math.random() * 400;
+                const mGroup = new THREE.Group();
+                const base = new THREE.Mesh(new THREE.CylinderGeometry(40, 50, 80, 6), wallMat);
+                const dome = new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), new THREE.MeshPhongMaterial({ color: 0x00f2ff, emissive: 0x00f2ff, transparent: true, opacity: 0.6 }));
+                dome.position.y = 50;
+                mGroup.add(base, dome);
+                mGroup.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+                mGroup.userData = { title: mosqueNames[i], desc: mosqueLore[i] };
+                scene.add(mGroup);
+                mosques.push(mGroup);
+            }
+
+            // High-Rise Buildings
+            cityBody = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), wallMat, 4000);
+            const dummy = new THREE.Object3D();
+            let count = 0;
+            for (let i = 0; i < 4000; i++) {
+                const r = 800 + Math.random() * 700, a = Math.random() * Math.PI * 2;
+                if (Math.abs(a % (Math.PI / 2)) < 0.12) continue; // Traffic Corridors
+                const h = 40 + Math.pow(Math.random(), 3) * 500;
+                dummy.position.set(Math.cos(a) * r, h/2, Math.sin(a) * r);
+                dummy.scale.set(20 + Math.random() * 20, h, 20 + Math.random() * 20);
+                dummy.updateMatrix();
+                cityBody.setMatrixAt(count, dummy.matrix);
+                cityBody.setColorAt(count, new THREE.Color().setHSL(0.5 + Math.random() * 0.1, 1, 0.1 + Math.random() * 0.2));
+                count++;
+            }
+            scene.add(cityBody);
+
+            // The Nexus Tower
+            palaceGroup = new THREE.Group();
+            const spire = new THREE.Mesh(new THREE.CylinderGeometry(5, 60, 800, 4), wallMat);
+            const core = new THREE.Mesh(new THREE.SphereGeometry(80, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+            core.position.y = 400;
+            palaceGroup.add(spire, core);
+            scene.add(palaceGroup);
+        }
+
+        function createTraffic() {
+            const carGeo = new THREE.BoxGeometry(4, 2, 8);
+            const carMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            for (let i = 0; i < 200; i++) {
+                const car = new THREE.Mesh(carGeo, carMat);
+                const axis = Math.floor(Math.random() * 4);
+                car.userData = { axis, speed: 2 + Math.random() * 5, pos: Math.random() * 4000 - 2000 };
+                scene.add(car);
+                trafficSystem.push(car);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            trafficSystem.forEach(car => {
+                car.userData.pos += car.userData.speed;
+                if (car.userData.pos > 2000) car.userData.pos = -2000;
+                if (car.userData.axis === 0) car.position.set(car.userData.pos, 200 + Math.sin(car.userData.pos * 0.01) * 20, 0);
+                if (car.userData.axis === 1) car.position.set(-car.userData.pos, 250, 0);
+                if (car.userData.axis === 2) car.position.set(0, 300, car.userData.pos);
+                if (car.userData.axis === 3) car.position.set(0, 180, -car.userData.pos);
+            });
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            if (raycaster.intersectObject(palaceGroup, true).length > 0) return showCard("The Nexus Spire", "The central AI governing core.");
+            for (let m of mosques) {
+                if (raycaster.intersectObject(m, true).length > 0) return showCard(m.userData.title, m.userData.desc);
+            }
+        }
+
+        function showCard(t, d) {
+            document.getElementById('card-title').innerText = t;
+            document.getElementById('card-desc').innerText = d;
+            document.getElementById('building-card').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
