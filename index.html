@@ -2,228 +2,128 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neo-Baghdad: The Eternal Round City</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+    <title>Neo-Baghdad: High-Vis Oasis</title>
     <style>
-        :root { --neon: #00f2ff; --gold: #ffd700; --magenta: #ff007b; --bg: #010103; }
-        body { margin: 0; overflow: hidden; background: var(--bg); font-family: 'Orbitron', sans-serif; color: white; }
+        body { margin: 0; overflow: hidden; background: #010105; font-family: 'Orbitron', sans-serif; }
+        /* Fixes the 'infinite scroll' by locking the canvas to the viewport */
+        canvas { display: block; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
         
-        /* 1. Cinematic HUD & Scanner UI */
-        #hud { position: fixed; inset: 0; pointer-events: none; border: 1px solid rgba(0, 242, 255, 0.1); z-index: 10; background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.8) 100%); }
-        .scanner-line { position: absolute; width: 100%; height: 2px; background: rgba(0, 242, 255, 0.2); top: 0; animation: scan 8s linear infinite; }
-        
-        #card { position: fixed; bottom: 40px; right: 40px; width: 380px; background: rgba(2, 2, 10, 0.9); border-right: 4px solid var(--neon); padding: 30px; display: none; backdrop-filter: blur(20px); z-index: 100; box-shadow: -20px 20px 60px rgba(0,0,0,0.7); }
-        #card h2 { color: var(--neon); letter-spacing: 3px; border-bottom: 1px solid rgba(0, 242, 255, 0.3); padding-bottom: 10px; margin-top: 0; }
-        
-        /* 2. Start Sequence */
-        #boot { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: 2s cubic-bezier(0.8, 0, 0.2, 1); }
-        .glitch { font-size: 5rem; letter-spacing: 25px; text-shadow: 0 0 30px var(--neon); color: var(--neon); }
-        .launch-btn { margin-top: 60px; padding: 20px 60px; background: transparent; border: 1px solid var(--gold); color: var(--gold); cursor: pointer; font-family: 'Cinzel'; letter-spacing: 10px; transition: 0.5s; font-size: 1.2rem; }
-        .launch-btn:hover { background: var(--gold); color: black; box-shadow: 0 0 50px var(--gold); transform: translateY(-5px); }
-
-        @keyframes scan { from { top: 0%; } to { top: 100%; } }
+        #ui { position: fixed; top: 20px; left: 20px; color: #00f2ff; z-index: 100; pointer-events: none; }
+        #building-card { position: fixed; bottom: 30px; right: 30px; width: 300px; background: rgba(0, 10, 20, 0.9); border: 2px solid #ffd700; color: white; padding: 20px; display: none; backdrop-filter: blur(10px); }
     </style>
 </head>
 <body>
-    <div id="boot">
-        <h1 class="glitch">NEO-BAGHDAD</h1>
-        <p style="color: #444; letter-spacing: 15px;">IMPROVED RADIAL ARCHITECTURE // V5.0</p>
-        <button class="launch-btn" onclick="initializeSim()">INITIATE ASCENSION</button>
-    </div>
-    <div id="hud"><div class="scanner-line"></div></div>
-    <div id="card"><h2 id="card-t"></h2><p id="card-d" style="line-height:1.7; opacity:0.8;"></p></div>
+    <div id="ui"><h1>NEO-BAGHDAD V6</h1><p>STATUS: OPTIMIZED VISIBILITY</p></div>
+    <div id="building-card"><h2 id="card-title"></h2><p id="card-desc"></p></div>
 
     <script type="importmap"> { "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js" } } </script>
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
-        let scene, camera, renderer, controls, cityMesh, foliageMesh, traffic = [];
-        const mosqueObjects = [];
-        const mouse = new THREE.Vector2(), raycaster = new THREE.Raycaster();
+        let scene, camera, renderer, controls, cityMesh;
+        const mosques = [];
 
-        window.initializeSim = () => {
-            document.getElementById('boot').style.opacity = '0';
-            setTimeout(() => { document.getElementById('boot').remove(); start(); }, 1200);
-        };
-
-        function start() {
+        function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x000105);
-            scene.fog = new THREE.FogExp2(0x000105, 0.00008);
+            scene.background = new THREE.Color(0x020208);
+            
+            // 1. IMPROVED LIGHTING (This fixes the 'invisible' buildings)
+            const ambient = new THREE.AmbientLight(0x4040ff, 0.5); // Blue fill light
+            const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+            sun.position.set(1000, 2000, 1000);
+            const point = new THREE.PointLight(0x00f2ff, 3, 5000); // Central neon glow
+            scene.add(ambient, sun, point);
 
-            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 200000);
-            camera.position.set(6000, 4000, 6000);
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 100000);
+            camera.position.set(3000, 2000, 3000);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.5;
+            renderer.toneMappingExposure = 1.5; // Brightens the whole scene
             document.body.appendChild(renderer.domElement);
 
+            // 2. CAMERA LOCKS (Prevents infinite scrolling away)
             controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.autoRotate = true;
-            controls.autoRotateSpeed = 0.1;
+            controls.maxDistance = 8000;
+            controls.minDistance = 500;
+            controls.maxPolarAngle = Math.PI / 2.1;
 
-            // 3. 20+ IMPROVEMENTS LIST:
-            // High-intensity core light, Starfield, Bloom, Detailed Domes, Flying traffic etc.
-            setupEnvironment();
-            buildImprovedCity();
-            createWorshipCenters();
-            spawnAeroTraffic();
-
-            window.addEventListener('click', onInteraction);
+            createCity();
             animate();
         }
 
-        function setupEnvironment() {
-            // Stars
-            const sGeo = new THREE.BufferGeometry();
-            const sPos = [];
-            for(let i=0; i<20000; i++) sPos.push((Math.random()-0.5)*150000, (Math.random()-0.5)*150000, (Math.random()-0.5)*150000);
-            sGeo.setAttribute('position', new THREE.Float32BufferAttribute(sPos, 3));
-            scene.add(new THREE.Points(sGeo, new THREE.PointsMaterial({color: 0xffffff, size: 2})));
-
-            // High-Vis Lighting
-            const sun = new THREE.DirectionalLight(0xffffff, 2.5);
-            sun.position.set(2000, 4000, 2000);
-            const ambient = new THREE.AmbientLight(0x101030, 0.8);
-            const point = new THREE.PointLight(0x00f2ff, 5, 10000);
-            point.position.set(0, 1500, 0); // The "Nexus" glow
-            scene.add(sun, ambient, point);
-        }
-
-        function buildImprovedCity() {
-            // Holographic Base
-            const grid = new THREE.GridHelper(30000, 100, 0x00f2ff, 0x010208);
+        function createCity() {
+            // 3. HIGH-VISIBILITY FLOOR
+            const grid = new THREE.GridHelper(10000, 50, 0x00f2ff, 0x050510);
             scene.add(grid);
 
-            // Walls (Triple Layer - Improved visibility)
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0x050505, metalness: 1, roughness: 0.1 });
-            const buildWall = (r, h, col) => {
-                const wall = new THREE.Mesh(new THREE.TorusGeometry(r, 45, 16, 128), wallMat);
-                wall.rotation.x = Math.PI/2;
-                const neon = new THREE.Mesh(new THREE.TorusGeometry(r+10, 5, 8, 128), new THREE.MeshBasicMaterial({color: col}));
-                neon.rotation.x = Math.PI/2; neon.position.y = h;
-                scene.add(wall, neon);
-            };
-            buildWall(3200, 40, 0x00f2ff); // Outer Wall
-            buildWall(1400, 120, 0xff00ff); // Inner Wall
-
-            // The Nexus Central Spire
-            const spire = new THREE.Mesh(new THREE.CylinderGeometry(5, 100, 2000, 4), wallMat);
-            const energy = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 32), new THREE.MeshBasicMaterial({color: 0x00f2ff, transparent:true, opacity:0.8}));
-            energy.position.y = 800;
-            scene.add(spire, energy);
-
-            // MASSIVE ALGORITHM: 12,000 Buildings with Variation
-            const count = 12000;
-            const bGeo = new THREE.BoxGeometry(1, 1, 1);
-            cityMesh = new THREE.InstancedMesh(bGeo, wallMat, count);
-            
-            // Foliage Algorithm (Green spaces in Baghdad)
-            const fGeo = new THREE.ConeGeometry(1, 1, 8);
-            foliageMesh = new THREE.InstancedMesh(fGeo, new THREE.MeshStandardMaterial({color: 0x00ff88}), 2000);
-
-            const dummy = new THREE.Object3D();
-            let bIndex = 0, fIndex = 0;
-
-            for (let i = 0; i < count; i++) {
-                const r = 1500 + Math.random() * 1600;
-                const a = Math.random() * Math.PI * 2;
-                
-                // Clear 4 Gates
-                if (Math.abs(a % (Math.PI / 2)) < 0.12) continue;
-
-                const x = Math.cos(a) * r, z = Math.sin(a) * r;
-                
-                if (Math.random() > 0.85 && fIndex < 2000) {
-                    // Place a "Vertical Forest" tree
-                    dummy.position.set(x, 20, z);
-                    dummy.scale.set(40, 80, 40);
-                    dummy.updateMatrix();
-                    foliageMesh.setMatrixAt(fIndex++, dummy.matrix);
-                }
-
-                const h = 100 + Math.pow(Math.random(), 6) * 2200; // Hyper-Tall Spire Variation
-                dummy.position.set(x, h/2, z);
-                dummy.scale.set(40 + Math.random()*20, h, 40 + Math.random()*20);
-                dummy.rotation.y = -a;
-                dummy.updateMatrix();
-                cityMesh.setMatrixAt(bIndex, dummy.matrix);
-                cityMesh.setColorAt(bIndex++, new THREE.Color().setHSL(0.55, 1, 0.1 + Math.random()*0.4));
-            }
-            scene.add(cityMesh, foliageMesh);
-        }
-
-        function createWorshipCenters() {
-            // Distinct Gold/Turquoise Domes from the Reference Image
-            const names = ["The Azure Nexus", "Al-Khulafa Data-Dome", "Minaret of Wisdom"];
-            for (let i = 0; i < 8; i++) {
-                const a = (i / 8) * Math.PI * 2, r = 1000 + Math.random() * 400;
-                const m = new THREE.Group();
-                const base = new THREE.Mesh(new THREE.CylinderGeometry(80, 100, 150, 8), wallMat);
-                const dome = new THREE.Mesh(new THREE.SphereGeometry(70, 32, 32), new THREE.MeshStandardMaterial({
-                    color: 0x00f2ff, emissive: 0x00f2ff, emissiveIntensity: 3, metalness: 1
-                }));
+            // 4. PLACES OF WORSHIP (Gold/Turquoise Emissive)
+            const mosqueMat = new THREE.MeshStandardMaterial({ 
+                color: 0x00f2ff, emissive: 0x00f2ff, emissiveIntensity: 2, metalness: 1 
+            });
+            for(let i=0; i<8; i++) {
+                const angle = (i/8) * Math.PI * 2;
+                const r = 1200;
+                const group = new THREE.Group();
+                const dome = new THREE.Mesh(new THREE.SphereGeometry(60, 32, 32), mosqueMat);
                 dome.position.y = 100;
-                m.add(base, dome);
-                m.position.set(Math.cos(a)*r, 0, Math.sin(a)*r);
-                m.userData = { t: names[i%3], d: "Spiritual resonance hub. Integrated atmospheric filters." };
-                scene.add(m);
-                mosqueObjects.push(m);
+                const base = new THREE.Mesh(new THREE.CylinderGeometry(70, 70, 150), new THREE.MeshStandardMaterial({color: 0x111111}));
+                group.add(dome, base);
+                group.position.set(Math.cos(angle)*r, 0, Math.sin(angle)*r);
+                group.userData = { title: "Nexus Mosque", desc: "Spiritual hub for Sector " + i };
+                scene.add(group);
+                mosques.push(group);
             }
-        }
 
-        function spawnAeroTraffic() {
-            const carGeo = new THREE.BoxGeometry(20, 4, 10);
-            const carMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            for (let i = 0; i < 600; i++) {
-                const car = new THREE.Mesh(carGeo, carMat);
-                car.userData = { axis: Math.floor(Math.random()*4), spd: 12 + Math.random()*25, p: Math.random()*8000-4000 };
-                traffic.push(car);
-                scene.add(car);
+            // 5. CITY BUILDINGS (Reflective Physical Material)
+            const cityMat = new THREE.MeshPhysicalMaterial({ 
+                color: 0x050505, metalness: 0.9, roughness: 0.1, clearcoat: 1 
+            });
+            cityMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), cityMat, 8000);
+            const dummy = new THREE.Object3D();
+            for(let i=0; i<8000; i++) {
+                const r = 1400 + Math.random() * 1500;
+                const a = Math.random() * Math.PI * 2;
+                if(Math.abs(a % (Math.PI/2)) < 0.1) continue; // Keep Gate roads clear
+
+                const h = 50 + Math.pow(Math.random(), 4) * 1200;
+                dummy.position.set(Math.cos(a)*r, h/2, Math.sin(a)*r);
+                dummy.scale.set(30, h, 30);
+                dummy.updateMatrix();
+                cityMesh.setMatrixAt(i, dummy.matrix);
+                cityMesh.setColorAt(i, new THREE.Color().setHSL(0.5, 1, 0.2 + Math.random()*0.3));
             }
+            scene.add(cityMesh);
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            traffic.forEach(c => {
-                c.userData.p += c.userData.spd;
-                if (c.userData.p > 4000) c.userData.p = -4000;
-                const off = (c.userData.axis % 2 === 0) ? 100 : -100;
-                if (c.userData.axis < 2) c.position.set(c.userData.p, 500 + (c.userData.axis * 150), off);
-                else c.position.set(off, 600 + (c.userData.axis * 80), c.userData.p);
-            });
             controls.update();
             renderer.render(scene, camera);
         }
 
-        function onInteraction(e) {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        window.onclick = (e) => {
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2(
+                (e.clientX/window.innerWidth)*2-1, 
+                -(e.clientY/window.innerHeight)*2+1
+            );
             raycaster.setFromCamera(mouse, camera);
             
-            // 1. Check Domes
-            const mHits = raycaster.intersectObjects(mosqueObjects, true);
-            if (mHits.length > 0) {
+            // Check Mosques first
+            const mHits = raycaster.intersectObjects(mosques, true);
+            if(mHits.length > 0) {
                 const data = mHits[0].object.parent.userData;
-                return show(data.t, data.d);
+                document.getElementById('card-title').innerText = data.title;
+                document.getElementById('card-desc').innerText = data.desc;
+                document.getElementById('building-card').style.display = 'block';
+                return;
             }
-            // 2. Check Spire
-            const bHits = raycaster.intersectObject(cityMesh);
-            if (bHits.length > 0) {
-                return show("SECTOR ALPHA-" + (bHits[0].instanceId % 255).toString(16), "High-density residential monolith. Carbon-neutral rating: A+");
-            }
-        }
+        };
 
-        function show(t, d) {
-            document.getElementById('card-t').innerText = t;
-            document.getElementById('card-d').innerText = d;
-            document.getElementById('card').style.display = 'block';
-        }
+        init();
     </script>
 </body>
 </html>
