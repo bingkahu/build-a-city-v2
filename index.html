@@ -3,195 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neo-Baghdad: The Vertical Round City</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <title>Neo-Baghdad: The Eternal Round City</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        :root { --neon-blue: #00f2ff; --neon-purple: #bc00ff; --gold: #d4af37; }
-        body { margin: 0; overflow: hidden; background: #020205; font-family: 'Cinzel', serif; }
-        #boot-sequence { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #020205; z-index: 100; transition: opacity 1.5s; color: white; text-align: center; }
-        .intro-slide { opacity: 0; position: absolute; transition: opacity 0.5s; display: none; flex-direction: column; align-items: center; }
-        .intro-slide.active { opacity: 1; display: flex; }
-        .intro-slide h1 { color: var(--neon-blue); letter-spacing: 15px; font-size: 3rem; text-shadow: 0 0 20px var(--neon-blue); }
-        .continue-btn { padding: 10px 25px; background: none; border: 1px solid var(--neon-blue); color: var(--neon-blue); cursor: pointer; margin-top: 20px; font-family: 'Cinzel'; }
-        #building-card { position: fixed; top: 20px; right: 20px; width: 320px; background: rgba(5, 5, 15, 0.9); border: 1px solid var(--neon-blue); color: white; padding: 25px; display: none; z-index: 50; backdrop-filter: blur(20px); box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); }
-        #close-card { position: absolute; top: 10px; right: 15px; color: var(--neon-blue); cursor: pointer; font-size: 1.5rem; }
-        #ui-layer { position: fixed; bottom: 20px; right: 20px; z-index: 10; }
-        .ui-btn { padding: 10px 18px; background: rgba(0,0,0,0.8); border: 1px solid var(--neon-purple); color: var(--neon-purple); text-decoration: none; font-size: 0.8rem; transition: 0.3s; }
-        .ui-btn:hover { background: var(--neon-purple); color: white; box-shadow: 0 0 15px var(--neon-purple); }
+        :root { --neon: #00f2ff; --magenta: #ff00cc; --gold: #ffd700; --bg: #010103; }
+        body { margin: 0; overflow: hidden; background: var(--bg); font-family: 'Orbitron', sans-serif; }
+        
+        /* High-Tech HUD */
+        #hud { position: fixed; inset: 0; pointer-events: none; border: 1px solid rgba(0, 242, 255, 0.15); z-index: 10; background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.6) 100%); }
+        #boot-seq { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: 2.5s cubic-bezier(0.8, 0, 0.2, 1); }
+        .glitch { color: var(--neon); font-size: 5rem; letter-spacing: 30px; text-transform: uppercase; text-shadow: 0 0 30px var(--neon); animation: flicker 3s infinite; }
+        
+        #card { position: fixed; bottom: 60px; right: 60px; width: 420px; background: rgba(2, 2, 10, 0.95); border-right: 5px solid var(--neon); color: white; padding: 35px; display: none; backdrop-filter: blur(30px); z-index: 100; box-shadow: -20px 20px 60px rgba(0,0,0,0.8); }
+        #card h2 { font-family: 'Orbitron'; color: var(--neon); letter-spacing: 3px; border-bottom: 1px solid rgba(0, 242, 255, 0.3); padding-bottom: 15px; }
+        
+        .launch-btn { pointer-events: all; margin-top: 80px; padding: 20px 80px; background: transparent; border: 1px solid var(--gold); color: var(--gold); font-family: 'Cinzel'; cursor: pointer; letter-spacing: 12px; transition: 0.6s; font-size: 1.2rem; text-transform: uppercase; }
+        .launch-btn:hover { background: var(--gold); color: black; box-shadow: 0 0 60px var(--gold); transform: translateY(-5px); }
+        
+        @keyframes flicker { 0%, 100% { opacity: 1; } 5%, 10% { opacity: 0.4; } 15% { opacity: 1; } }
     </style>
 </head>
 <body>
-    <div id="building-card"><div id="close-card">×</div><h2 id="card-title"></h2><p id="card-desc"></p></div>
-    <div id="boot-sequence">
-        <div class="intro-slide active">
-            <h1>NEO-BAGHDAD</h1>
-            <p>The Improved Round City of the Future</p>
-            <button class="continue-btn" onclick="nextSlide()">INITIALIZE SYSTEMS</button>
-        </div>
-        <div class="intro-slide">
-            <h1>ASCEND</h1>
-            <p>Architectural Core: <span style="color:var(--gold)">MATTEO-OS</span></p>
-            <button class="continue-btn" style="border-color:var(--neon-purple); color:var(--neon-purple);" onclick="startApp()">LAUNCH SIMULATION</button>
-        </div>
+    <div id="boot-seq">
+        <h1 class="glitch">NEO-BAGHDAD</h1>
+        <p style="color: #444; letter-spacing: 15px; margin-top: 20px;">HYPER-STRUCTURAL ARCHIVE // VERSION 5.0</p>
+        <button class="launch-btn" onclick="engage()">Engage Neural Link</button>
     </div>
-    <div id="ui-layer"><a href="#" class="ui-btn">SYSTEM SCAN</a></div>
-    <audio id="bg-music" loop><source src="https://cdn.pixabay.com/audio/2021/11/23/audio_0399879743.mp3" type="audio/mpeg"></audio>
+    <div id="hud"></div>
+    <div id="card"><h2 id="card-t"></h2><p id="card-d" style="line-height:1.8; opacity:0.8; font-family:'Orbitron'; font-size:0.9rem;"></p></div>
 
     <script type="importmap"> { "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js" } } </script>
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
-        let scene, camera, renderer, controls, cityBody, palaceGroup, raycaster, mouse;
-        let trafficSystem = [];
-        const mosques = [], gates = [];
-        const mosqueNames = ["Al-Mansur Bio-Dome", "The Friday Nexus", "Turquoise Data-Sanctuary", "Al-Khulafa Uplink", "Scholars' Oratory 2.0"];
-        const mosqueLore = ["Atmospheric purification center.", "Central frequency synchronization hub.", "Quantum data storage facility.", "Long-range communication array.", "Neural-link educational library."];
+        let scene, camera, renderer, controls, cityMesh, trafficNodes = [];
+        const mouse = new THREE.Vector2(), raycaster = new THREE.Raycaster();
 
-        window.nextSlide = () => {
-            const current = document.querySelector('.intro-slide.active');
-            current.classList.remove('active');
-            current.nextElementSibling.classList.add('active');
+        window.engage = () => {
+            document.getElementById('boot-seq').style.opacity = '0';
+            document.getElementById('boot-seq').style.transform = 'scale(1.2)';
+            setTimeout(() => { document.getElementById('boot-seq').remove(); initWorld(); }, 1200);
         };
-
-        window.startApp = () => {
-            document.getElementById('bg-music').play().catch(() => {});
-            document.getElementById('boot-sequence').style.opacity = '0';
-            setTimeout(() => { document.getElementById('boot-sequence').remove(); init(); }, 1000);
-        };
-function init() {
+function initWorld() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x020205);
-            scene.fog = new THREE.FogExp2(0x020205, 0.00015);
+            scene.background = new THREE.Color(0x000002);
+            scene.fog = new THREE.FogExp2(0x000002, 0.00006);
 
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 40000);
-            camera.position.set(2500, 1800, 2500);
+            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 300000);
+            camera.position.set(6000, 4500, 6000);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.toneMapping = THREE.ReinhardToneMapping;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.6;
             document.body.appendChild(renderer.domElement);
 
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            raycaster = new THREE.Raycaster();
-            mouse = new THREE.Vector2();
+            controls.dampingFactor = 0.05;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.2;
 
-            const sun = new THREE.DirectionalLight(0xffffff, 2.5);
-            sun.position.set(1000, 2000, 1000);
-            scene.add(sun, new THREE.AmbientLight(0x4040ff, 0.6));
+            // Deep Space Stars
+            const sGeo = new THREE.BufferGeometry();
+            const sPos = [];
+            for(let i=0; i<15000; i++) sPos.push((Math.random()-0.5)*100000, (Math.random()-0.5)*100000, (Math.random()-0.5)*100000);
+            sGeo.setAttribute('position', new THREE.Float32BufferAttribute(sPos, 3));
+            scene.add(new THREE.Points(sGeo, new THREE.PointsMaterial({color: 0xffffff, size: 3})));
 
-            createCity();
-            createTraffic();
-            window.addEventListener('click', onClick);
-            document.getElementById('close-card').onclick = () => document.getElementById('building-card').style.display = 'none';
+            const ambient = new THREE.AmbientLight(0x002244, 0.6);
+            const coreSun = new THREE.PointLight(0x00f2ff, 4, 15000);
+            coreSun.position.set(0, 1000, 0);
+            scene.add(ambient, coreSun);
+
+            createTitanCity();
+            createMaglevNetwork();
+            window.addEventListener('click', scanBuilding);
             animate();
         }
 
-        function createCity() {
-            // Floor Grid
-            const grid = new THREE.GridHelper(10000, 50, 0x00f2ff, 0x002233);
-            scene.add(grid);
+        function createTitanCity() {
+            const floor = new THREE.GridHelper(40000, 80, 0x00f2ff, 0x010105);
+            scene.add(floor);
 
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 1, roughness: 0.1 });
-            const neonBlue = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
-            const neonPurple = new THREE.MeshBasicMaterial({ color: 0xbc00ff });
-
-            // Walls with Glow Rings
-            const addFuturisticWall = (r, h, w, mat) => {
-                const group = new THREE.Group();
-                const wall = new THREE.Mesh(new THREE.TorusGeometry(r, w, 16, 100), wallMat);
+            // Triple Wall System (Detailed)
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x050505, metalness: 1, roughness: 0.1 });
+            const buildWallLayer = (r, h, glowCol) => {
+                const wall = new THREE.Mesh(new THREE.TorusGeometry(r, 40, 16, 128), wallMat);
                 wall.rotation.x = Math.PI / 2;
-                const glow = new THREE.Mesh(new THREE.TorusGeometry(r + 2, 2, 8, 100), mat);
-                glow.rotation.x = Math.PI / 2;
-                glow.position.y = h;
-                group.add(wall, glow);
-                scene.add(group);
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(r + 8, 5, 8, 128), new THREE.MeshBasicMaterial({color: glowCol}));
+                ring.rotation.x = Math.PI / 2;
+                ring.position.y = h;
+                scene.add(wall, ring);
             };
-            addFuturisticWall(1600, 150, 20, neonBlue);
-            addFuturisticWall(700, 200, 15, neonPurple);
+            buildWallLayer(2800, 50, 0x00f2ff); // Outer Perimeter
+            buildWallLayer(1200, 120, 0xff00ff); // Royal Inner Circle
 
-            // Future Mosques
-            for (let i = 0; i < 5; i++) {
-                const a = (i / 5) * Math.PI * 2, r = 900 + Math.random() * 400;
-                const mGroup = new THREE.Group();
-                const base = new THREE.Mesh(new THREE.CylinderGeometry(40, 50, 80, 6), wallMat);
-                const dome = new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), new THREE.MeshPhongMaterial({ color: 0x00f2ff, emissive: 0x00f2ff, transparent: true, opacity: 0.6 }));
-                dome.position.y = 50;
-                mGroup.add(base, dome);
-                mGroup.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-                mGroup.userData = { title: mosqueNames[i], desc: mosqueLore[i] };
-                scene.add(mGroup);
-                mosques.push(mGroup);
-            }
+            // The Nexus Pillar (Palace Replacement)
+            const nexus = new THREE.Group();
+            const beam = new THREE.Mesh(new THREE.CylinderGeometry(5, 120, 2500, 4), wallMat);
+            const core = new THREE.Mesh(new THREE.SphereGeometry(250, 64, 64), new THREE.MeshBasicMaterial({color: 0x00f2ff, transparent: true, opacity: 0.8}));
+            core.position.y = 800;
+            nexus.add(beam, core);
+            scene.add(nexus);
 
-            // High-Rise Buildings
-            cityBody = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), wallMat, 4000);
+            // Procedural Building Algorithm (10,000 Units)
+            const buildCount = 10000;
+            cityMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), wallMat, buildCount);
             const dummy = new THREE.Object3D();
-            let count = 0;
-            for (let i = 0; i < 4000; i++) {
-                const r = 800 + Math.random() * 700, a = Math.random() * Math.PI * 2;
-                if (Math.abs(a % (Math.PI / 2)) < 0.12) continue; // Traffic Corridors
-                const h = 40 + Math.pow(Math.random(), 3) * 500;
-                dummy.position.set(Math.cos(a) * r, h/2, Math.sin(a) * r);
-                dummy.scale.set(20 + Math.random() * 20, h, 20 + Math.random() * 20);
-                dummy.updateMatrix();
-                cityBody.setMatrixAt(count, dummy.matrix);
-                cityBody.setColorAt(count, new THREE.Color().setHSL(0.5 + Math.random() * 0.1, 1, 0.1 + Math.random() * 0.2));
-                count++;
-            }
-            scene.add(cityBody);
+            let actualCount = 0;
 
-            // The Nexus Tower
-            palaceGroup = new THREE.Group();
-            const spire = new THREE.Mesh(new THREE.CylinderGeometry(5, 60, 800, 4), wallMat);
-            const core = new THREE.Mesh(new THREE.SphereGeometry(80, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
-            core.position.y = 400;
-            palaceGroup.add(spire, core);
-            scene.add(palaceGroup);
+            for (let i = 0; i < buildCount; i++) {
+                const r = 1350 + Math.random() * 1350;
+                const a = Math.random() * Math.PI * 2;
+                
+                // Four Gate Clearance (Matching historical photos)
+                if (Math.abs(a % (Math.PI / 2)) < 0.14) continue;
+
+                const x = Math.cos(a) * r;
+                const z = Math.sin(a) * r;
+                const h = 100 + Math.pow(Math.random(), 6) * 1800; // Exponentially rare giants
+
+                dummy.position.set(x, h/2, z);
+                dummy.scale.set(45 + Math.random()*25, h, 45 + Math.random()*25);
+                dummy.rotation.y = -a;
+                dummy.updateMatrix();
+                
+                cityMesh.setMatrixAt(actualCount, dummy.matrix);
+                const colorVal = 0.2 + Math.random() * 0.5;
+                cityMesh.setColorAt(actualCount, new THREE.Color().setHSL(0.55, 1, colorVal));
+                actualCount++;
+            }
+            scene.add(cityMesh);
         }
 
-        function createTraffic() {
-            const carGeo = new THREE.BoxGeometry(4, 2, 8);
-            const carMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            for (let i = 0; i < 200; i++) {
-                const car = new THREE.Mesh(carGeo, carMat);
-                const axis = Math.floor(Math.random() * 4);
-                car.userData = { axis, speed: 2 + Math.random() * 5, pos: Math.random() * 4000 - 2000 };
+        function createMaglevNetwork() {
+            const mGeo = new THREE.BoxGeometry(20, 4, 8);
+            for (let i = 0; i < 600; i++) {
+                const car = new THREE.Mesh(mGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                const ax = Math.floor(Math.random() * 4);
+                car.userData = { ax, spd: 15 + Math.random() * 30, p: Math.random() * 8000 - 4000 };
+                trafficNodes.push(car);
                 scene.add(car);
-                trafficSystem.push(car);
             }
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            trafficSystem.forEach(car => {
-                car.userData.pos += car.userData.speed;
-                if (car.userData.pos > 2000) car.userData.pos = -2000;
-                if (car.userData.axis === 0) car.position.set(car.userData.pos, 200 + Math.sin(car.userData.pos * 0.01) * 20, 0);
-                if (car.userData.axis === 1) car.position.set(-car.userData.pos, 250, 0);
-                if (car.userData.axis === 2) car.position.set(0, 300, car.userData.pos);
-                if (car.userData.axis === 3) car.position.set(0, 180, -car.userData.pos);
+            trafficNodes.forEach(car => {
+                car.userData.p += car.userData.spd;
+                if (car.userData.p > 4000) car.userData.p = -4000;
+                const off = (car.userData.ax % 2 === 0) ? 80 : -80;
+                if (car.userData.ax < 2) car.position.set(car.userData.p, 450 + (car.userData.ax * 150), off);
+                else car.position.set(off, 600 + (car.userData.ax * 80), car.userData.pos);
             });
             controls.update();
             renderer.render(scene, camera);
         }
 
-        function onClick(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        function scanBuilding(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
-            if (raycaster.intersectObject(palaceGroup, true).length > 0) return showCard("The Nexus Spire", "The central AI governing core.");
-            for (let m of mosques) {
-                if (raycaster.intersectObject(m, true).length > 0) return showCard(m.userData.title, m.userData.desc);
+            const hit = raycaster.intersectObject(cityMesh);
+            if (hit.length > 0) {
+                document.getElementById('card-t').innerText = "ARCHIVE: SEC-" + (hit[0].instanceId % 256).toString(16).toUpperCase();
+                document.getElementById('card-d').innerText = "Quantum-encrypted residential monolith. Integrated life-support systems optimized for 2099 atmospheric conditions. Structural integrity: 99.8%.";
+                document.getElementById('card').style.display = 'block';
             }
-        }
-
-        function showCard(t, d) {
-            document.getElementById('card-title').innerText = t;
-            document.getElementById('card-desc').innerText = d;
-            document.getElementById('building-card').style.display = 'block';
         }
     </script>
 </body>
