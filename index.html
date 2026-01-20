@@ -3,229 +3,498 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neo-Baghdad: The Eternal Round City</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+    <title>Neo-Baghdad: Titan Class</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2ff; --gold: #ffd700; --magenta: #ff007b; --bg: #020205; }
+        :root { 
+            --gold: #ffcc00; 
+            --cyan: #00f2ff; 
+            --void: #050a10; 
+            --glass-bg: rgba(5, 10, 16, 0.85);
+            --hud-border: 1px solid rgba(255, 204, 0, 0.3);
+        }
+
+        /* ENGINE LOCK - Prevents Scrolling / White Bars */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #c2b280; /* Sand color base */
+            font-family: 'Orbitron', sans-serif; 
+            user-select: none;
+        }
         
-        /* FIX: Prevents the 'infinite scroll' by locking the body */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Orbitron', sans-serif; }
-        canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
+        canvas { display: block; outline: none; }
 
-        /* Cinematic Intro Sequence */
-        #boot-seq { 
-            position: fixed; inset: 0; background: var(--bg); 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            z-index: 1000; transition: 2s cubic-bezier(0.8, 0, 0.2, 1); 
+        /* --- UI LAYER: BOOT SEQUENCE --- */
+        #boot-layer {
+            position: fixed; inset: 0; background: var(--void);
+            z-index: 9999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 1.5s ease-in-out;
         }
-        .glitch-title { 
-            font-size: 5rem; letter-spacing: 25px; color: var(--neon); 
-            text-shadow: 0 0 30px var(--neon); animation: glitch 3s infinite;
+        
+        .loader-ring {
+            width: 80px; height: 80px; border: 4px solid rgba(255,204,0,0.1);
+            border-top: 4px solid var(--gold); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 30px;
         }
-        .launch-btn { 
-            margin-top: 50px; padding: 20px 60px; background: transparent; 
-            border: 2px solid var(--gold); color: var(--gold); cursor: pointer; 
-            font-family: 'Cinzel'; letter-spacing: 10px; font-size: 1.2rem; transition: 0.5s;
+        
+        .boot-text {
+            font-family: 'Cinzel'; font-size: 3rem; color: var(--gold);
+            letter-spacing: 10px; text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255,204,0,0.5);
         }
-        .launch-btn:hover { background: var(--gold); color: black; box-shadow: 0 0 50px var(--gold); transform: scale(1.05); }
 
-        /* Interactive UI Layers */
-        #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; border: 1px solid rgba(0, 242, 255, 0.1); }
-        #building-card { 
-            position: fixed; bottom: 40px; right: 40px; width: 380px; 
-            background: rgba(5, 5, 20, 0.95); border-right: 4px solid var(--neon); 
-            padding: 30px; display: none; backdrop-filter: blur(25px); z-index: 100;
-            box-shadow: -20px 20px 60px rgba(0,0,0,0.8);
+        .boot-sub {
+            font-family: 'Share Tech Mono'; color: var(--cyan);
+            margin-top: 10px; letter-spacing: 4px; font-size: 0.9rem;
         }
-        #building-card h2 { color: var(--neon); margin: 0 0 15px 0; border-bottom: 1px solid rgba(0,242,255,0.2); padding-bottom: 10px; }
 
-        @keyframes glitch {
-            0% { transform: skew(0deg); }
-            2% { transform: skew(10deg); filter: hue-rotate(90deg); }
-            4% { transform: skew(-10deg); }
-            6% { transform: skew(0deg); }
+        .btn-engage {
+            margin-top: 60px; padding: 15px 60px;
+            background: transparent; border: 1px solid var(--gold);
+            color: var(--gold); font-family: 'Orbitron'; font-weight: 900;
+            letter-spacing: 6px; cursor: pointer; transition: 0.3s;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
         }
+        .btn-engage:hover { background: var(--gold); color: black; box-shadow: 0 0 50px var(--gold); }
+
+        /* --- UI LAYER: HUD --- */
+        #hud {
+            position: fixed; inset: 0; pointer-events: none; z-index: 100;
+            opacity: 0; transition: opacity 1s 1.5s;
+        }
+        
+        .hud-corner { position: absolute; padding: 20px; color: var(--cyan); font-family: 'Share Tech Mono'; font-size: 0.8rem; }
+        .top-left { top: 0; left: 0; border-left: 2px solid var(--gold); border-top: 2px solid var(--gold); width: 100px; height: 100px; }
+        .top-right { top: 0; right: 0; text-align: right; }
+        .bottom-left { bottom: 0; left: 0; display: flex; align-items: flex-end; }
+        
+        #scanner-panel {
+            position: fixed; bottom: 40px; right: 40px; width: 400px;
+            background: var(--glass-bg); border-right: 4px solid var(--gold);
+            padding: 25px; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(10px); pointer-events: auto;
+            box-shadow: -10px 10px 30px rgba(0,0,0,0.5);
+        }
+        #scanner-panel.active { transform: translateX(0); }
+        
+        #scan-title { font-family: 'Cinzel'; color: var(--gold); font-size: 1.8rem; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+        #scan-body { color: #ccc; font-family: 'Share Tech Mono'; line-height: 1.6; font-size: 0.95rem; }
+        .scan-meta { display: flex; justify-content: space-between; margin-top: 20px; font-size: 0.7rem; color: var(--cyan); text-transform: uppercase; }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div id="boot-seq">
-        <h1 class="glitch-title">NEO-BAGHDAD</h1>
-        <p style="color: #555; letter-spacing: 12px;">QUANTUM ARCHITECTURAL UPLINK V7.0</p>
-        <button class="launch-btn" onclick="initSimulation()">INITIATE NEURAL LINK</button>
+
+    <div id="boot-layer">
+        <div class="loader-ring"></div>
+        <div class="boot-text">NEO-BAGHDAD</div>
+        <div class="boot-sub">SYSTEM: TITAN // CLASS: SOLAR ARCHIVE</div>
+        <button class="btn-engage" onclick="initSystem()">INITIALIZE LINK</button>
     </div>
 
-    <div id="hud"></div>
-    <div id="building-card"><h2 id="card-t"></h2><p id="card-d"></p></div>
+    <div id="hud">
+        <div class="hud-corner top-left"></div>
+        <div class="hud-corner top-right">
+            SUN ANGLE: 88.4°<br>
+            TEMP: 48°C<br>
+            POPULATION: 12.4M
+        </div>
+        <div class="hud-corner bottom-left">
+            <span style="color:var(--gold); font-size: 1.2rem;">Connected to The House of Wisdom</span>
+        </div>
+        
+        <div id="scanner-panel">
+            <div id="scan-title">TARGET LOCKED</div>
+            <div id="scan-body"> awaiting input...</div>
+            <div class="scan-meta">
+                <span>SEC: <span id="meta-sec">--</span></span>
+                <span>INT: <span id="meta-int">--</span>%</span>
+            </div>
+        </div>
+    </div>
 
-    <script type="importmap"> { "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js" } } </script>
+    <script type="importmap">
+        { "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js" } }
+    </script>
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
-        let scene, camera, renderer, controls, cityMesh, trafficNodes = [];
-        const mosqueObjects = [];
-        const mouse = new THREE.Vector2(), raycaster = new THREE.Raycaster();
+        // --- GLOBAL VARIABLES ---
+        let scene, camera, renderer, controls;
+        let cityMesh, trafficSystem, dustSystem;
+        let centralRing;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let interactables = [];
+        let isAutoPiloting = false;
+        let lastInteraction = Date.now();
 
-        window.initSimulation = () => {
-            document.getElementById('boot-seq').style.opacity = '0';
-            document.getElementById('boot-seq').style.transform = 'scale(1.5)';
-            setTimeout(() => { 
-                document.getElementById('boot-seq').remove(); 
-                startEngine(); 
-            }, 1200);
+        // --- CONFIGURATION ---
+        const CONFIG = {
+            buildingCount: 30000, // Massive scale
+            worldSize: 60000,
+            fogColor: 0xd9eef2, // Desert Day Haze
+            sunColor: 0xffffff,
+            groundColor: 0xe2d1a4,
+            trafficCount: 2000
         };
 
-        function startEngine() {
+        // --- INITIALIZATION ---
+        window.initSystem = function() {
+            const boot = document.getElementById('boot-layer');
+            boot.style.opacity = '0';
+            setTimeout(() => { 
+                boot.remove(); 
+                document.getElementById('hud').style.opacity = '1';
+                setupEngine(); 
+            }, 1000);
+        };
+
+        function setupEngine() {
+            // 1. SCENE SETUP
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x010105);
-            scene.fog = new THREE.FogExp2(0x010105, 0.0001);
+            scene.background = new THREE.Color(CONFIG.fogColor);
+            // Exponential fog for that "endless desert" look
+            scene.fog = new THREE.FogExp2(CONFIG.fogColor, 0.000035);
 
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
-            camera.position.set(5000, 3500, 5000);
+            // 2. CAMERA (High far plane for Titan scale)
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 10, 500000);
+            camera.position.set(8000, 6000, 8000);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            // 3. RENDERER (Logarithmic Depth Buffer prevents z-fighting on massive scales)
+            renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.8; // High visibility
+            renderer.toneMappingExposure = 1.1;
             document.body.appendChild(renderer.domElement);
 
+            // 4. CONTROLS
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.maxPolarAngle = Math.PI / 2.1;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2.05; // Prevent going underground
+            controls.minDistance = 500;
+            controls.maxDistance = 40000;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
 
-            // VISIBILITY UPGRADE: Advanced Lighting
-            const sun = new THREE.DirectionalLight(0xffffff, 2.5);
-            sun.position.set(2000, 4000, 2000);
-            const ambient = new THREE.AmbientLight(0x4040ff, 0.7); // Deep blue fill
-            const bluePoint = new THREE.PointLight(0x00f2ff, 4, 10000);
-            bluePoint.position.set(0, 1000, 0);
-            scene.add(sun, ambient, bluePoint);
+            // 5. LIGHTING (High Noon)
+            setupLighting();
 
-            generateWorld();
-            spawnTraffic();
-            window.addEventListener('click', handleRaycast);
+            // 6. WORLD GENERATION
+            createGround();
+            createTheSolarForge(); // The central hub
+            createCityDistricts();
+            createTrafficSystem();
+            createDustAtmosphere();
+
+            // 7. LISTENERS
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('mousemove', () => { 
+                lastInteraction = Date.now(); 
+                controls.autoRotate = false; 
+            });
+
+            // 8. START LOOP
             animate();
         }
 
-        function generateWorld() {
-            // High-Contrast Grid Floor
-            const grid = new THREE.GridHelper(20000, 80, 0x00f2ff, 0x050515);
-            scene.add(grid);
+        function setupLighting() {
+            const sun = new THREE.DirectionalLight(CONFIG.sunColor, 4.0);
+            sun.position.set(10000, 15000, 5000);
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 4096; // High quality shadows
+            sun.shadow.mapSize.height = 4096;
+            scene.add(sun);
 
-            // The Triple Wall System (From your Reference Image)
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.9, roughness: 0.2 });
-            const neonRing = (r, h, col) => {
-                const wall = new THREE.Mesh(new THREE.TorusGeometry(r, 40, 16, 128), wallMat);
-                wall.rotation.x = Math.PI/2;
-                const ring = new THREE.Mesh(new THREE.TorusGeometry(r+10, 5, 8, 128), new THREE.MeshBasicMaterial({color: col}));
-                ring.rotation.x = Math.PI/2; ring.position.y = h;
-                scene.add(wall, ring);
-            };
-            neonRing(3000, 40, 0x00f2ff); // Outer Wall
-            neonRing(1200, 100, 0xff00ff); // Inner Palace Wall
+            const ambient = new THREE.HemisphereLight(CONFIG.fogColor, CONFIG.groundColor, 1.0);
+            scene.add(ambient);
+        }
 
-            // PLACES OF WORSHIP: Distinctive Domes (Fixes visibility of religious sites)
-            const worshipSites = ["Grand Sapphire Mosque", "Dome of Knowledge", "Al-Khulafa Nexus"];
-            for (let i = 0; i < 8; i++) {
-                const angle = (i / 8) * Math.PI * 2;
-                const dist = 1400 + Math.random() * 200;
-                
-                const site = new THREE.Group();
-                const dome = new THREE.Mesh(new THREE.SphereGeometry(80, 32, 32), new THREE.MeshStandardMaterial({
-                    color: 0x00f2ff, emissive: 0x00f2ff, emissiveIntensity: 5, metalness: 1
-                }));
-                dome.position.y = 120;
-                const base = new THREE.Mesh(new THREE.CylinderGeometry(100, 110, 200, 8), wallMat);
-                site.add(dome, base);
-                site.position.set(Math.cos(angle)*dist, 0, Math.sin(angle)*dist);
-                site.userData = { t: worshipSites[i%3], d: "Ancient architectural geometry fused with modern neural-glass tech." };
-                scene.add(site);
-                mosqueObjects.push(site);
-            }
-
-            // ADVANCED BUILDING ALGORITHM: Glass & Emissive Windows
-            const buildCount = 10000;
-            const bGeo = new THREE.BoxGeometry(1, 1, 1);
-            const bMat = new THREE.MeshPhysicalMaterial({ 
-                color: 0x111111, metalness: 0.9, roughness: 0.1, transmission: 0.3, thickness: 2
+        function createGround() {
+            // Infinite Horizon Plane
+            const geo = new THREE.PlaneGeometry(100000, 100000);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: CONFIG.groundColor, 
+                roughness: 1,
+                metalness: 0
             });
-            cityMesh = new THREE.InstancedMesh(bGeo, bMat, buildCount);
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+
+            // Grid overlay for "Sim" feel
+            const grid = new THREE.GridHelper(60000, 100, 0x000000, 0x000000);
+            grid.position.y = 5;
+            grid.material.opacity = 0.05;
+            grid.material.transparent = true;
+            scene.add(grid);
+        }
+
+        function createTheSolarForge() {
+            // "The House of Wisdom" - Massive Central Structure
+            const forgeGroup = new THREE.Group();
+            
+            // Materials
+            const glass = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff, metalness: 0.1, roughness: 0, 
+                transmission: 1, thickness: 50, ior: 1.5, clearcoat: 1
+            });
+            const gold = new THREE.MeshStandardMaterial({ 
+                color: 0xffd700, metalness: 1, roughness: 0.2 
+            });
+
+            // The Dome
+            const dome = new THREE.Mesh(new THREE.SphereGeometry(600, 64, 32, 0, Math.PI*2, 0, Math.PI/2), glass);
+            
+            // The Spire
+            const spire = new THREE.Mesh(new THREE.CylinderGeometry(10, 80, 4000, 8), glass);
+            spire.position.y = 2000;
+
+            // Rotating Rings
+            centralRing = new THREE.Group();
+            const r1 = new THREE.Mesh(new THREE.TorusGeometry(900, 20, 16, 100), gold);
+            const r2 = new THREE.Mesh(new THREE.TorusGeometry(1200, 30, 16, 100), gold);
+            r1.rotation.x = Math.PI / 2;
+            r2.rotation.x = Math.PI / 2.2;
+            centralRing.add(r1, r2);
+            
+            forgeGroup.add(dome, spire, centralRing);
+            
+            // Metadata for click interaction
+            forgeGroup.userData = {
+                type: "landmark",
+                title: "THE SOLAR FORGE",
+                desc: "The central neural processor of Neo-Baghdad. Reclaiming 99.9% of solar radiation to power the city's AI governance layer.",
+                sec: "ALPHA-01",
+                int: "100"
+            };
+
+            interactables.push(dome, spire); // Add parts to raycast list
+            scene.add(forgeGroup);
+
+            // Add the 4 Gates
+            const gateDist = 5000;
+            const gates = [
+                { name: "GATE OF KUFA", a: 0 },
+                { name: "GATE OF BASRA", a: Math.PI/2 },
+                { name: "GATE OF KHURASAN", a: Math.PI },
+                { name: "GATE OF SYRIA", a: Math.PI*1.5 }
+            ];
+
+            gates.forEach(g => {
+                const gate = new THREE.Mesh(new THREE.BoxGeometry(400, 1500, 400), glass);
+                gate.position.set(Math.cos(g.a)*gateDist, 750, Math.sin(g.a)*gateDist);
+                gate.userData = {
+                    type: "landmark",
+                    title: g.name,
+                    desc: "Historical entry checkpoint converted into atmospheric filtration and data-ingress terminals.",
+                    sec: "PERIMETER",
+                    int: "95"
+                };
+                interactables.push(gate);
+                scene.add(gate);
+            });
+        }
+
+        function createCityDistricts() {
+            // Instanced Mesh for High Performance (30,000 Buildings)
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            // Crystal/Glass Material for the buildings
+            const material = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                metalness: 0.1,
+                roughness: 0.1,
+                transmission: 0.6, // Semi-transparent
+                reflectivity: 1,
+                clearcoat: 1
+            });
+
+            cityMesh = new THREE.InstancedMesh(geometry, material, CONFIG.buildingCount);
             
             const dummy = new THREE.Object3D();
-            let actualIdx = 0;
+            const color = new THREE.Color();
+            
+            let count = 0;
+            for (let i = 0; i < CONFIG.buildingCount; i++) {
+                // Radial Distribution
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 2500 + Math.random() * 18000; // From center to edge
 
-            for (let i = 0; i < buildCount; i++) {
-                const r = 1600 + Math.random() * 1400;
-                const a = Math.random() * Math.PI * 2;
+                // Create gaps for the 4 Main Roads (Historical Round City Layout)
+                const roadWidth = 0.15; // Radians
+                if (
+                    Math.abs(angle - 0) < roadWidth || 
+                    Math.abs(angle - Math.PI/2) < roadWidth || 
+                    Math.abs(angle - Math.PI) < roadWidth || 
+                    Math.abs(angle - Math.PI*1.5) < roadWidth
+                ) continue;
+
+                // Height algorithm based on clusters
+                let height = 50 + Math.random() * 200;
+                // Make some "Mega Towers"
+                if (Math.random() > 0.98) height = 800 + Math.random() * 1500;
                 
-                // Historical Gate Road Clearing (North, South, East, West)
-                if (Math.abs(a % (Math.PI / 2)) < 0.12) continue;
+                // Scale width based on height
+                const width = 40 + Math.random() * 60;
 
-                const h = 100 + Math.pow(Math.random(), 5) * 1800; // Skyscrapers
-                dummy.position.set(Math.cos(a)*r, h/2, Math.sin(a)*r);
-                dummy.scale.set(40 + Math.random()*20, h, 40 + Math.random()*20);
-                dummy.rotation.y = -a;
+                dummy.position.set(Math.cos(angle) * radius, height / 2, Math.sin(angle) * radius);
+                dummy.rotation.y = -angle; // Face center
+                dummy.scale.set(width, height, width);
                 dummy.updateMatrix();
                 
-                cityMesh.setMatrixAt(actualIdx, dummy.matrix);
-                // Visible Blue-tinted window shades
-                cityMesh.setColorAt(actualIdx++, new THREE.Color().setHSL(0.55, 1, 0.2 + Math.random()*0.3));
+                cityMesh.setMatrixAt(count, dummy.matrix);
+                
+                // Color Variation (Gold/White/Cyan tints)
+                const tint = Math.random();
+                if (tint > 0.9) color.setHex(0xffd700); // Gold
+                else if (tint > 0.8) color.setHex(0x00f2ff); // Cyan
+                else color.setHex(0xffffff); // White
+                
+                cityMesh.setColorAt(count, color);
+                count++;
             }
+            
+            cityMesh.count = count; // Update actual count
             scene.add(cityMesh);
         }
 
-        function spawnTraffic() {
-            const carGeo = new THREE.BoxGeometry(20, 3, 8);
-            const carMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            for (let i = 0; i < 500; i++) {
-                const car = new THREE.Mesh(carGeo, carMat);
-                car.userData = { axis: Math.floor(Math.random()*4), spd: 15 + Math.random()*30, p: Math.random()*8000-4000 };
-                trafficNodes.push(car);
-                scene.add(car);
+        function createTrafficSystem() {
+            // Floating Drones / Cars
+            const geometry = new THREE.BoxGeometry(15, 2, 8);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
+            trafficSystem = new THREE.InstancedMesh(geometry, material, CONFIG.trafficCount);
+            
+            const dummy = new THREE.Object3D();
+            const trafficData = [];
+
+            for (let i = 0; i < CONFIG.trafficCount; i++) {
+                const laneRadius = 3000 + Math.random() * 12000;
+                const speed = 0.0005 + Math.random() * 0.002;
+                const yPos = 200 + Math.random() * 800;
+                const startAngle = Math.random() * Math.PI * 2;
+                
+                trafficData.push({ r: laneRadius, s: speed, y: yPos, a: startAngle });
             }
+            trafficSystem.userData.traffic = trafficData;
+            scene.add(trafficSystem);
         }
 
+        function createDustAtmosphere() {
+            // Floating particles to give depth
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 15000; i++) {
+                vertices.push(
+                    (Math.random() - 0.5) * 40000,
+                    Math.random() * 5000,
+                    (Math.random() - 0.5) * 40000
+                );
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 15, transparent: true, opacity: 0.4 });
+            dustSystem = new THREE.Points(geometry, material);
+            scene.add(dustSystem);
+        }
+
+        // --- ANIMATION LOOP ---
         function animate() {
             requestAnimationFrame(animate);
-            trafficNodes.forEach(c => {
-                c.userData.p += c.userData.spd;
-                if (c.userData.p > 4000) c.userData.p = -4000;
-                const off = (c.userData.axis % 2 === 0) ? 80 : -80;
-                if (c.userData.axis < 2) c.position.set(c.userData.p, 500 + (c.userData.axis * 150), off);
-                else c.position.set(off, 600 + (c.userData.axis * 80), c.userData.p);
-            });
+
+            const time = Date.now() * 0.001;
+
+            // 1. Rotate Central Rings
+            if(centralRing) {
+                centralRing.rotation.z = time * 0.1;
+                centralRing.children[0].rotation.x += 0.005;
+            }
+
+            // 2. Animate Traffic
+            if (trafficSystem) {
+                const dummy = new THREE.Object3D();
+                const data = trafficSystem.userData.traffic;
+                for (let i = 0; i < CONFIG.trafficCount; i++) {
+                    const t = data[i];
+                    t.a += t.s; // Move angle
+                    dummy.position.set(Math.cos(t.a) * t.r, t.y, Math.sin(t.a) * t.r);
+                    dummy.rotation.y = -t.a;
+                    dummy.updateMatrix();
+                    trafficSystem.setMatrixAt(i, dummy.matrix);
+                }
+                trafficSystem.instanceMatrix.needsUpdate = true;
+            }
+
+            // 3. Cinematic Auto-Pan
+            if (Date.now() - lastInteraction > 5000) {
+                controls.autoRotate = true;
+            }
+
             controls.update();
             renderer.render(scene, camera);
         }
 
-        function handleRaycast(e) {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
+        // --- INTERACTION ---
+        function onMouseDown(event) {
+            event.preventDefault();
             
-            const mHits = raycaster.intersectObjects(mosqueObjects, true);
-            if (mHits.length > 0) {
-                const d = mHits[0].object.parent.userData;
-                return updateCard(d.t, d.d);
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+
+            // Check Landmarks first
+            const landmarkHits = raycaster.intersectObjects(interactables, true);
+            if (landmarkHits.length > 0) {
+                let target = landmarkHits[0].object;
+                // Traverse up to find the group with data
+                while(target.parent && !target.userData.title) target = target.parent;
+                
+                if (target.userData.title) {
+                    showScanner(target.userData.title, target.userData.desc, target.userData.sec, target.userData.int);
+                    return;
+                }
             }
 
-            const cHits = raycaster.intersectObject(cityMesh);
-            if (cHits.length > 0) {
-                updateCard("Sovereign Spire " + (cHits[0].instanceId % 999), "High-density neural housing unit.");
+            // Check City Instances
+            const cityHits = raycaster.intersectObject(cityMesh);
+            if (cityHits.length > 0) {
+                const id = cityHits[0].instanceId;
+                const sectorName = "RESIDENTIAL BLOCK " + (id % 999);
+                const integrity = (80 + Math.random() * 20).toFixed(1);
+                showScanner(
+                    sectorName,
+                    "High-density habitation module with integrated water recycling and solar glazing. Population: " + (Math.floor(Math.random()*5000) + 500),
+                    "SEC-" + (id % 8),
+                    integrity
+                );
+            } else {
+                hideScanner();
             }
         }
 
-        function updateCard(t, d) {
-            document.getElementById('card-t').innerText = t;
-            document.getElementById('card-d').innerText = d;
-            document.getElementById('building-card').style.display = 'block';
+        function showScanner(title, desc, sec, int) {
+            const panel = document.getElementById('scanner-panel');
+            document.getElementById('scan-title').innerText = title;
+            document.getElementById('scan-body').innerText = desc;
+            document.getElementById('meta-sec').innerText = sec;
+            document.getElementById('meta-int').innerText = int;
+            panel.classList.add('active');
         }
 
-        window.addEventListener('resize', () => {
+        function hideScanner() {
+            document.getElementById('scanner-panel').classList.remove('active');
+        }
+
+        function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        }
     </script>
 </body>
 </html>
