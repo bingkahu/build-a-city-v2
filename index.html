@@ -3,134 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATTEO-CORE // COMMAND CENTER</title>
+    <title>NEO-BAGHDAD // COMMAND CENTER</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;800&family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --m-neon: #00f2ff;
-            --m-gold: #ffaa00;
-            --m-bg: #010203;
-            --m-glass: rgba(2, 6, 10, 0.95);
-            --m-border: 1px solid rgba(0, 242, 255, 0.3);
+            --n-gold: #ffcc00;
+            --n-neon: #00f2ff;
+            --n-bg: #e0f2f7;
+            --n-glass: rgba(10, 20, 30, 0.9);
+            --n-border: 1px solid rgba(0, 242, 255, 0.5);
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: var(--m-bg);
+            overflow: hidden; background: #000;
             font-family: 'JetBrains Mono', monospace; color: #fff;
         }
 
         canvas { display: block; outline: none; }
 
-        /* --- THE MATTEO BOOT SEQUENCE --- */
+        /* --- THE LEGENDARY BOOT SEQUENCE --- */
         #boot-screen {
             position: fixed; inset: 0; background: #000; z-index: 10000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 1.5s ease-out;
         }
-        .terminal-wrap {
-            width: 80%; max-width: 800px; height: 400px;
-            background: #050505; border: 1px solid #1a1a1a;
-            padding: 25px; position: relative; overflow: hidden;
+        .boot-wrap {
+            width: 80%; max-width: 900px; height: 500px;
+            background: #050505; border: 1px solid #222;
+            padding: 30px; position: relative; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
         }
-        #boot-log { font-size: 12px; color: var(--m-neon); line-height: 1.5; height: 100%; }
-        .m-loader { width: 100%; height: 2px; background: #111; margin-top: 15px; }
-        #m-bar { width: 0%; height: 100%; background: var(--m-neon); box-shadow: 0 0 10px var(--m-neon); }
+        #boot-log { font-size: 13px; color: var(--n-neon); line-height: 1.6; height: 100%; overflow: hidden; }
+        .progress-bar { width: 100%; height: 4px; background: #111; margin-top: 20px; position: relative; }
+        #progress-fill { width: 0%; height: 100%; background: var(--n-neon); box-shadow: 0 0 15px var(--n-neon); transition: 0.1s; }
 
-        /* --- MASTER HUD ARCHITECTURE --- */
+        /* --- NEO-BAGHDAD MASTER HUD --- */
         #hud { position: fixed; inset: 0; pointer-events: none; z-index: 1000; opacity: 0; transition: 2s; }
         
         .panel { 
-            position: absolute; background: var(--m-glass); border: var(--m-border); 
-            padding: 20px; backdrop-filter: blur(10px); pointer-events: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: absolute; background: var(--n-glass); border: var(--n-border); 
+            padding: 20px; backdrop-filter: blur(15px); pointer-events: auto;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
         }
 
-        /* Top Left: Commander Identity */
-        .id-card { top: 30px; left: 30px; width: 360px; }
-        .id-header { font-family: 'Orbitron'; font-weight: 900; color: var(--m-gold); font-size: 18px; margin-bottom: 10px; border-bottom: 1px solid #333; }
-        .stat-line { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px; color: #999; }
-        .stat-val { color: var(--m-neon); font-weight: 800; }
+        .header-box { top: 30px; left: 30px; width: 420px; }
+        .n-title { font-family: 'Orbitron'; font-weight: 900; color: var(--n-gold); font-size: 24px; letter-spacing: 3px; border-bottom: 2px solid var(--n-gold); margin-bottom: 10px; }
+        .stat-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; color: #888; }
+        .stat-row b { color: var(--n-neon); }
 
-        /* Top Right: Global Status */
-        .status-card { top: 30px; right: 30px; text-align: right; width: 280px; }
+        .alt-panel { bottom: 30px; left: 30px; width: 300px; text-align: center; }
+        .alt-val { font-family: 'Orbitron'; font-size: 52px; font-weight: 900; color: #fff; margin: 5px 0; text-shadow: 0 0 20px rgba(0, 242, 255, 0.5); }
 
-        /* Navigation Matrix (Bottom Left) */
-        .nav-card { bottom: 30px; left: 30px; width: 400px; }
-        .alt-readout { font-size: 40px; font-family: 'Orbitron'; font-weight: 900; color: #fff; margin: 10px 0; }
-
-        /* The Data Slate (Bottom Right) - For building info */
-        .slate { 
-            bottom: 30px; right: 30px; width: 450px; 
-            transform: translateX(120%); transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);
-        }
-        .slate.active { transform: translateX(0); }
-        .scan-bar { width: 100%; height: 2px; background: var(--m-neon); margin: 15px 0; opacity: 0.5; animation: pulse 2s infinite; }
-
-        /* Action Buttons */
-        .controls { position: absolute; right: 30px; top: 220px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
+        .control-panel { top: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; }
         .m-btn {
-            background: rgba(0, 242, 255, 0.05); border: 1px solid var(--m-neon); color: var(--m-neon);
-            padding: 15px 25px; font-size: 11px; font-weight: 800; letter-spacing: 2px;
-            cursor: pointer; transition: 0.3s; text-transform: uppercase;
+            background: rgba(0, 242, 255, 0.05); border: 1px solid var(--n-neon); color: var(--n-neon);
+            padding: 15px 25px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 2px;
         }
-        .m-btn:hover { background: var(--m-neon); color: #000; box-shadow: 0 0 20px var(--m-neon); }
+        .m-btn:hover { background: var(--n-neon); color: #000; transform: scale(1.05); }
 
-        /* Terminal Feed */
-        #feed { height: 80px; overflow: hidden; font-size: 10px; color: #666; margin-top: 15px; border-top: 1px dashed #222; padding-top: 10px; }
+        .data-slate { 
+            bottom: 30px; right: 30px; width: 480px; 
+            transform: translateX(120%); transition: 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .data-slate.active { transform: translateX(0); }
 
-        @keyframes pulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+        .scan-line { width: 100%; height: 2px; background: var(--n-gold); margin: 15px 0; opacity: 0.5; animation: scan 2s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; transform: scaleX(1.1); } }
     </style>
 </head>
 <body>
 
     <div id="boot-screen">
-        <div style="font-family: 'Orbitron'; font-size: 28px; margin-bottom: 20px;">MATTEO-CORE INITIALIZATION</div>
-        <div class="terminal-wrap">
+        <div class="boot-wrap">
             <div id="boot-log"></div>
-        </div>
-        <div class="m-loader" style="width: 80%; max-width: 800px;">
-            <div id="m-bar"></div>
+            <div class="progress-bar"><div id="progress-fill"></div></div>
         </div>
     </div>
 
     <div id="hud">
-        <div class="panel id-card">
-            <div class="id-header">COMMANDER: MATTEO</div>
-            <div class="stat-line"><span>ACCESS LEVEL:</span><span class="stat-val">SUPREME-ARCHITECT</span></div>
-            <div class="stat-line"><span>SYNC STATUS:</span><span class="stat-val">CRYSTAL CLEAR</span></div>
-            <div class="stat-line"><span>SECTOR:</span><span class="stat-val">NEO-BAGHDAD PRIME</span></div>
-            <div id="feed"></div>
+        <div class="panel header-box">
+            <div class="n-title">NEO-BAGHDAD // V12</div>
+            <div class="stat-row"><span>OPERATOR:</span><b>COMMANDER MATTEO</b></div>
+            <div class="stat-row"><span>SYSTEM:</span><b>QUANTUM-ROUND CITY ENGINE</b></div>
+            <div class="stat-row"><span>VISIBILITY:</span><b style="color: #00ff00;">MAXIMUM SOLAR</b></div>
+            <div id="terminal-feed" style="margin-top: 15px; font-size: 10px; color: #555; height: 60px; overflow: hidden;"></div>
         </div>
 
-        <div class="panel status-card">
-            <div class="stat-line"><span>GRID STABILITY:</span><span class="stat-val">100.0%</span></div>
-            <div class="stat-line"><span>CITIZEN COUNT:</span><span class="stat-val">24,501,902</span></div>
-            <div class="stat-line"><span>ENERGY YIELD:</span><span class="stat-val">842.1 PW</span></div>
-            <div class="stat-line"><span>TIME:</span><span class="stat-val" id="m-clock">00:00:00</span></div>
+        <div class="control-panel">
+            <button class="m-btn" onclick="setView('reset')">Standard View</button>
+            <button class="m-btn" onclick="setView('nexus')">House of Wisdom</button>
+            <button class="m-btn" onclick="toggleWeather()" id="weather-btn">Mode: Clear Day</button>
+            <button class="m-btn" onclick="triggerFlare()" style="border-color: var(--n-gold); color: var(--n-gold);">Solar Flare Pulse</button>
         </div>
 
-        <div class="controls">
-            <button class="m-btn" onclick="setView('reset')">Standard Recon</button>
-            <button class="m-btn" onclick="setView('nexus')">Nexus Spire</button>
-            <button class="m-btn" onclick="toggleTour()">Auto-Survey</button>
-            <button class="m-btn" onclick="triggerOverdrive()" style="border-color: var(--m-gold); color: var(--m-gold);">Grid Overdrive</button>
+        <div class="panel alt-panel">
+            <div style="font-size: 10px; letter-spacing: 2px; color: #666;">TELEMETRY // ALTITUDE</div>
+            <div class="alt-val" id="alt-txt">0000m</div>
+            <div style="width: 100%; height: 2px; background: #222;"><div id="alt-bar" style="width: 0%; height: 100%; background: var(--n-neon);"></div></div>
         </div>
 
-        <div class="panel nav-card">
-            <div style="font-size: 10px; letter-spacing: 2px; color: #555;">VERTICAL POSITIONING SYSTEM</div>
-            <div class="alt-readout" id="alt-txt">0000m</div>
-            <div style="width: 100%; height: 3px; background: #111;"><div id="alt-fill" style="height: 100%; width: 50%; background: var(--m-neon);"></div></div>
-        </div>
-
-        <div id="m-slate" class="panel slate">
-            <div class="id-header" id="slate-title">SCANNING ARCHITECTURE...</div>
-            <div class="scan-bar"></div>
-            <div id="slate-body" style="font-size: 13px; line-height: 1.7; color: #ccc;">
-                Touch a structure to decrypt its architectural metadata and resource allocation.
+        <div id="info-slate" class="panel data-slate">
+            <div class="n-title" id="node-id">SCANNING...</div>
+            <div class="scan-line"></div>
+            <div id="node-desc" style="font-size: 14px; line-height: 1.8; color: #ccc;">
+                Touch architectural nodes to initiate structural deep-scan and citizen metrics.
             </div>
-            <div style="display: flex; gap: 15px; margin-top: 20px;">
-                <div style="flex:1; border: 1px solid #333; padding: 10px; font-size: 10px;">ID: VERIFIED</div>
-                <div style="flex:1; border: 1px solid #333; padding: 10px; font-size: 10px;">AUTH: MATTEO</div>
+            <div style="display: flex; gap: 15px; margin-top: 25px;">
+                <div style="flex:1; border: 1px solid #333; padding: 10px; font-size: 10px; text-align: center;">INTEGRITY: 100%</div>
+                <div style="flex:1; border: 1px solid #333; padding: 10px; font-size: 10px; text-align: center;">TYPE: RESIDENTIAL</div>
             </div>
         </div>
     </div>
@@ -144,299 +126,225 @@
         import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
         /* --------------------------------------------------------------------
-            1. SYSTEM CONSTANTS & LORE DATA
+            1. CORE INITIALIZATION & BOOT
             --------------------------------------------------------------------
         */
         let scene, camera, renderer, controls, raycaster, mouse;
-        let trafficMesh, cityGroups = [];
-        let overdriveActive = false;
-        
-        const CITY_LORE = {
-            spire: { t: "THE MATTEO NEXUS", d: "The sovereign central processor. It manages the entire city's data flow and atmosphere scrubbing. Height: 5,200m." },
-            resident: { t: "HABITATION MONOLITH", d: "A vertical district optimized for 500,000 citizens. Equipped with integrated solar-refractive glass and hydro-recycling." },
-            industrial: { t: "FUSION FOUNDRY", d: "A high-output energy plant utilizing cold-fusion technology to power the outer residential rings." },
-            archive: { t: "KNOWLEDGE SILO", d: "A hardened storage facility housing the digital history of Neo-Baghdad. Protected by Level-10 encryption." }
-        };
+        let cityMesh, droneMesh, droneData = [];
+        let isGoldenHour = false;
+        let flareActive = false;
 
-        /* --------------------------------------------------------------------
-            2. THE BOOTLOADER SEQUENCE (MATTEO VERSION)
-            --------------------------------------------------------------------
-        */
-        const logContainer = document.getElementById('boot-log');
-        const bootMessages = [
-            ">> MATTEO-CORE V10.4 BOOTING...",
-            ">> CHECKING USER PRIVILEGES: COMMANDER MATTEO DETECTED.",
-            ">> CLEARING OBSCURE GEOMETRY ARRAYS...",
-            ">> REMOVING BUBBLE-SHIELD OVERLAYS...",
-            ">> SYNCHRONIZING 25,000 ARCHITECTURAL UNITS...",
-            ">> DEPLOYING TRAFFIC GRID [5,000 DRONES]...",
-            ">> CALIBRATING NEON ATMOSPHERE...",
-            ">> SECURING GRID INTEGRITY...",
-            ">> READY. WELCOME TO YOUR CITY, MATTEO."
+        const BOOT_LOGS = [
+            ">> NEO-BAGHDAD OS LOADED...",
+            ">> RESTORING ARCHIVED CODE (300+ LINES)...",
+            ">> BYPASSING SQUIDLY PROTOCOLS...",
+            ">> AUTHENTICATING COMMANDER MATTEO...",
+            ">> CLEARING ATMOSPHERIC INTERFERENCE...",
+            ">> GENERATING 25,000 ARCHITECTURAL NODES...",
+            ">> SYNCHRONIZING 8,000 DATA DRONES...",
+            ">> CALIBRATING SOLAR HIGH-NOON LIGHTING...",
+            ">> GRID STABILITY: OPTIMAL.",
+            ">> WELCOME BACK, MATTEO."
         ];
 
-        let msgIdx = 0;
         function runBoot() {
-            if (msgIdx < bootMessages.length) {
+            const log = document.getElementById('boot-log');
+            const bar = document.getElementById('progress-fill');
+            let idx = 0;
+            
+            const interval = setInterval(() => {
                 const line = document.createElement('div');
-                line.textContent = bootMessages[msgIdx];
-                logContainer.appendChild(line);
-                document.getElementById('m-bar').style.width = ((msgIdx + 1) / bootMessages.length * 100) + "%";
-                msgIdx++;
-                setTimeout(runBoot, 200 + Math.random() * 300);
-            } else {
-                setTimeout(startMatteoEngine, 800);
-            }
+                line.textContent = BOOT_LOGS[idx];
+                log.appendChild(line);
+                idx++;
+                bar.style.width = (idx / BOOT_LOGS.length * 100) + "%";
+                
+                if (idx >= BOOT_LOGS.length) {
+                    clearInterval(interval);
+                    setTimeout(initNeoBaghdad, 1000);
+                }
+            }, 180);
         }
         runBoot();
 
         /* --------------------------------------------------------------------
-            3. SCENE INITIALIZATION (NO BUBBLES)
+            2. THE 3D ENGINE
             --------------------------------------------------------------------
         */
-        function startMatteoEngine() {
+        function initNeoBaghdad() {
             document.getElementById('boot-screen').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('boot-screen').remove();
                 document.getElementById('hud').style.opacity = '1';
-                initThree();
-            }, 1000);
-        }
+            }, 1500);
 
-        function initThree() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x010305);
-            scene.fog = new THREE.FogExp2(0x010305, 0.00008);
+            scene.background = new THREE.Color(0xd0e8f0); // Bright Day
+            scene.fog = new THREE.FogExp2(0xd0e8f0, 0.00004);
 
-            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 10, 150000);
-            camera.position.set(10000, 6000, 10000);
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 100, 150000);
+            camera.position.set(15000, 10000, 15000);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.maxPolarAngle = Math.PI / 2.02; // Horizon lock
-            controls.minDistance = 100;
-            controls.maxDistance = 80000;
+            controls.maxPolarAngle = Math.PI / 2.05;
 
-            // Lights
-            const sun = new THREE.DirectionalLight(0xffffff, 2.5);
-            sun.position.set(5000, 10000, 5000);
+            // Lights (The High-Visibility Sun)
+            const sun = new THREE.DirectionalLight(0xffffff, 3);
+            sun.position.set(5000, 15000, 5000);
+            sun.name = "MainSun";
             scene.add(sun);
-            scene.add(new THREE.AmbientLight(0x1a2a4a, 1.2));
+            scene.add(new THREE.AmbientLight(0xbad7e9, 1.5));
 
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
-            // Construction
-            buildGroundGrid();
-            buildNexusCenter();
-            buildResidentialDistricts();
-            buildIndustrialSectors();
-            buildTrafficGrid();
-
-            window.addEventListener('resize', onResize);
-            window.addEventListener('mousemove', (e) => { mouse.x = (e.clientX/window.innerWidth)*2-1; mouse.y = -(e.clientY/window.innerHeight)*2+1; });
-            window.addEventListener('mousedown', onInteract);
+            buildCity();
+            buildDrones();
             
+            window.addEventListener('resize', onResize);
+            window.addEventListener('mousedown', onInteract);
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = (e.clientX/window.innerWidth)*2-1;
+                mouse.y = -(e.clientY/window.innerHeight)*2+1;
+            });
+
             animate();
-            setInterval(updateClock, 1000);
-            setInterval(pushLog, 2500);
+            setInterval(pushFeed, 3000);
         }
 
         /* --------------------------------------------------------------------
-            4. CLEAN PROCEDURAL CONSTRUCTION
+            3. PROCEDURAL CONSTRUCTION (NEO-BAGHDAD)
             --------------------------------------------------------------------
         */
-        function buildGroundGrid() {
-            const grid = new THREE.GridHelper(100000, 100, 0x00f2ff, 0x05151a);
-            grid.material.opacity = 0.15;
-            grid.material.transparent = true;
-            scene.add(grid);
-        }
-
-        function buildNexusCenter() {
-            // The Main Spire (Matteo's Throne)
-            const g = new THREE.Group();
-            
-            // Core Pillar
-            const pillarGeo = new THREE.CylinderGeometry(80, 250, 5200, 8);
-            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 });
-            const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-            pillar.position.y = 2600;
-            pillar.userData = CITY_LORE.spire;
-            g.add(pillar);
-
-            // Tech Fins
-            for(let i=0; i<4; i++) {
-                const finGeo = new THREE.BoxGeometry(20, 3000, 400);
-                const fin = new THREE.Mesh(finGeo, pillarMat);
-                fin.position.y = 2000;
-                fin.rotation.y = (Math.PI / 2) * i;
-                fin.position.x = Math.cos(fin.rotation.y) * 200;
-                fin.position.z = Math.sin(fin.rotation.y) * 200;
-                g.add(fin);
-            }
-
-            // Energy Crown (No massive bubble!)
-            const crownGeo = new THREE.TorusGeometry(350, 10, 16, 100);
-            const crownMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
-            const crown = new THREE.Mesh(crownGeo, crownMat);
-            crown.rotation.x = Math.PI/2;
-            crown.position.y = 4800;
-            g.add(crown);
-
-            scene.add(g);
-        }
-
-        function buildResidentialDistricts() {
-            const count = 15000;
+        function buildCity() {
+            const count = 25000;
             const geo = new THREE.BoxGeometry(1, 1, 1);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8, roughness: 0.2 });
-            const mesh = new THREE.InstancedMesh(geo, mat, count);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: 0xffffff, 
+                metalness: 0.6, 
+                roughness: 0.2 
+            });
             
+            cityMesh = new THREE.InstancedMesh(geo, mat, count);
             const dummy = new THREE.Object3D();
             const color = new THREE.Color();
 
-            for (let i = 0; i < count; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const r = 3000 + Math.random() * 12000;
-                
-                // Keep the cross-roads clear
-                if (Math.abs(angle % (Math.PI / 2)) < 0.05) continue;
-
-                const h = 200 + Math.random() * 2500;
-                const w = 60 + Math.random() * 100;
-
-                dummy.position.set(Math.cos(angle) * r, h/2, Math.sin(angle) * r);
-                dummy.scale.set(w, h, w);
-                dummy.updateMatrix();
-                mesh.setMatrixAt(i, dummy.matrix);
-
-                // Occasional Neon building
-                if (Math.random() > 0.95) color.setHex(0x00f2ff);
-                else color.setHex(0x333333);
-                mesh.setColorAt(i, color);
-            }
-            scene.add(mesh);
-            cityGroups.push(mesh);
-        }
-
-        function buildIndustrialSectors() {
-            const count = 3000;
-            const geo = new THREE.BoxGeometry(1, 1, 1);
-            const mat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.5 });
-            const mesh = new THREE.InstancedMesh(geo, mat, count);
-            
-            const dummy = new THREE.Object3D();
-
-            for (let i = 0; i < count; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const r = 18000 + Math.random() * 5000;
-                
-                const h = 400 + Math.random() * 800;
-                const w = 200 + Math.random() * 400;
-
-                dummy.position.set(Math.cos(angle) * r, h/2, Math.sin(angle) * r);
-                dummy.scale.set(w, h, w);
-                dummy.rotation.y = angle;
-                dummy.updateMatrix();
-                mesh.setMatrixAt(i, dummy.matrix);
-            }
-            scene.add(mesh);
-            cityGroups.push(mesh);
-        }
-
-        function buildTrafficGrid() {
-            const count = 5000;
-            const geo = new THREE.BoxGeometry(20, 6, 40);
-            const mat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
-            trafficMesh = new THREE.InstancedMesh(geo, mat, count);
-            
-            const data = [];
-            const dummy = new THREE.Object3D();
-
             for(let i=0; i<count; i++) {
-                const r = 2500 + Math.random() * 20000;
-                const speed = 0.001 + Math.random() * 0.004;
+                // Round City Logic (Concentric Rings)
                 const angle = Math.random() * Math.PI * 2;
-                const alt = 400 + Math.random() * 3000;
+                const ring = Math.floor(Math.random() * 8) + 1;
+                const r = ring * 3500 + (Math.random() * 1200);
 
-                data.push({ r, speed, angle, alt });
+                // Avoid placing in the main radial roads
+                if (Math.abs(angle % (Math.PI / 4)) < 0.05) continue;
+
+                const h = 200 + (Math.random() * 4500 * (1 / (ring * 0.5)));
+                const w = 100 + Math.random() * 150;
+
+                dummy.position.set(Math.cos(angle)*r, h/2, Math.sin(angle)*r);
+                dummy.scale.set(w, h, w);
+                dummy.updateMatrix();
+                cityMesh.setMatrixAt(i, dummy.matrix);
+
+                // Color coding based on height/function
+                if (h > 3500) color.setHex(0x1a1a1a); // Obsidian Spire
+                else if (h < 500) color.setHex(0xffffff); // Foundation Block
+                else color.setHex(0xcccccc);
+                cityMesh.setColorAt(i, color);
+            }
+            scene.add(cityMesh);
+
+            // Ground Grid
+            const grid = new THREE.GridHelper(120000, 100, 0x00f2ff, 0xbbbbbb);
+            grid.material.opacity = 0.1;
+            grid.material.transparent = true;
+            scene.add(grid);
+
+            // The House of Wisdom (Central Hub)
+            const hubGeo = new THREE.CylinderGeometry(400, 600, 8000, 8);
+            const hubMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 1 });
+            const hub = new THREE.Mesh(hubGeo, hubMat);
+            hub.position.y = 4000;
+            hub.userData = { t: "THE HOUSE OF WISDOM", d: "Central AI processor and historical archive of Neo-Baghdad. Managing 12.4 Billion data packets per second." };
+            scene.add(hub);
+        }
+
+        function buildDrones() {
+            const count = 8000;
+            const geo = new THREE.BoxGeometry(30, 8, 30);
+            const mat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
+            droneMesh = new THREE.InstancedMesh(geo, mat, count);
+            
+            const dummy = new THREE.Object3D();
+            for(let i=0; i<count; i++) {
+                const r = 4000 + Math.random() * 30000;
+                const alt = 500 + Math.random() * 4000;
+                const speed = 0.002 + Math.random() * 0.005;
+                const angle = Math.random() * Math.PI * 2;
+
+                droneData.push({ r, alt, speed, angle });
                 dummy.position.set(Math.cos(angle)*r, alt, Math.sin(angle)*r);
                 dummy.updateMatrix();
-                trafficMesh.setMatrixAt(i, dummy.matrix);
+                droneMesh.setMatrixAt(i, dummy.matrix);
             }
-            trafficMesh.userData = data;
-            scene.add(trafficMesh);
+            scene.add(droneMesh);
         }
 
         /* --------------------------------------------------------------------
-            5. ANIMATION & ENGINE LOGIC
+            4. ANIMATION & COMMANDS
             --------------------------------------------------------------------
         */
         function animate() {
             requestAnimationFrame(animate);
-            const time = Date.now() * 0.001;
-
-            // Animate Traffic
-            const tData = trafficMesh.userData;
+            
+            // Animate Drones
             const dummy = new THREE.Object3D();
-            for(let i=0; i<tData.length; i++) {
-                const d = tData[i];
-                d.angle += overdriveActive ? d.speed * 5 : d.speed;
+            for(let i=0; i<droneData.length; i++) {
+                const d = droneData[i];
+                d.angle += d.speed;
                 dummy.position.set(Math.cos(d.angle)*d.r, d.alt, Math.sin(d.angle)*d.r);
                 dummy.rotation.y = -d.angle;
                 dummy.updateMatrix();
-                trafficMesh.setMatrixAt(i, dummy.matrix);
+                droneMesh.setMatrixAt(i, dummy.matrix);
             }
-            trafficMesh.instanceMatrix.needsUpdate = true;
+            droneMesh.instanceMatrix.needsUpdate = true;
 
-            // HUD Data
-            const altitude = Math.round(camera.position.y);
-            document.getElementById('alt-txt').innerText = altitude + "m";
-            document.getElementById('alt-fill').style.width = Math.min(100, (altitude / 30000) * 100) + "%";
+            // Update Alt UI
+            const alt = Math.round(camera.position.y);
+            document.getElementById('alt-txt').innerText = alt + "m";
+            document.getElementById('alt-bar').style.width = Math.min(100, (alt/25000)*100) + "%";
 
-            // Post-Processing Overdrive
-            if (overdriveActive) {
-                renderer.toneMappingExposure = 1.5 + Math.sin(time * 20) * 0.2;
-                scene.fog.density = 0.0002;
-            } else {
-                renderer.toneMappingExposure = 1.0;
-                scene.fog.density = 0.00008;
+            // Flare Effect
+            if (flareActive) {
+                renderer.toneMappingExposure = 2.5 + Math.sin(Date.now() * 0.02);
             }
 
             controls.update();
             renderer.render(scene, camera);
         }
 
-        /* --------------------------------------------------------------------
-            6. INTERACTION & UTILITIES
-            --------------------------------------------------------------------
-        */
-        function onInteract(e) {
+        function onInteract() {
             raycaster.setFromCamera(mouse, camera);
             const hits = raycaster.intersectObjects(scene.children, true);
-            const slate = document.getElementById('m-slate');
+            const slate = document.getElementById('info-slate');
 
             if (hits.length > 0) {
                 const obj = hits[0].object;
-                
                 if (obj.userData.t) {
-                    // Nexus Click
-                    document.getElementById('slate-title').innerText = obj.userData.t;
-                    document.getElementById('slate-body').innerText = obj.userData.d;
+                    document.getElementById('node-id').innerText = obj.userData.t;
+                    document.getElementById('node-desc').innerText = obj.userData.d;
                     slate.classList.add('active');
-                } else if (obj.isInstancedMesh && obj !== trafficMesh) {
-                    // City Block Click
+                } else if (obj === cityMesh) {
                     const id = hits[0].instanceId;
-                    document.getElementById('slate-title').innerText = "BLOCK #" + (id + 5000);
-                    document.getElementById('slate-body').innerText = CITY_LORE.resident.d;
+                    document.getElementById('node-id').innerText = "SECTOR BLOCK #" + (id % 9999);
+                    document.getElementById('node-desc').innerText = "Standard habitation unit optimized for solar-energy absorption and water recycling. Current Occupancy: 4,500.";
                     slate.classList.add('active');
                 }
             } else {
@@ -444,40 +352,46 @@
             }
         }
 
-        function pushLog() {
-            const feed = document.getElementById('feed');
-            const msgs = [
-                ">> SECTOR 7: POWER FLOW NOMINAL", ">> DATA PACKET 902 RECEIVED",
-                ">> COMMANDER MATTEO: AUTH CONFIRMED", ">> ATMOSPHERIC QUALITY: 99.4%",
-                ">> DRONE GRID: OPTIMIZED", ">> ALERT: SOLAR WIND DEFLECTED"
+        function pushFeed() {
+            const feed = document.getElementById('terminal-feed');
+            const lines = [
+                ">> SOLAR YIELD: 98.4%", ">> DRONE GRID: STABLE", ">> COMMANDER MATTEO: AUTH OK", 
+                ">> SECTOR 4 PURGE COMPLETE", ">> ARCHIVE SYNCING...", ">> WINDS: 12KM/H"
             ];
             const div = document.createElement('div');
-            div.innerText = msgs[Math.floor(Math.random() * msgs.length)];
+            div.innerText = lines[Math.floor(Math.random()*lines.length)];
             feed.prepend(div);
-            if (feed.children.length > 5) feed.lastChild.remove();
+            if(feed.children.length > 4) feed.lastChild.remove();
         }
 
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('m-clock').innerText = now.toTimeString().split(' ')[0];
-        }
-
-        // --- EXPOSED COMMANDS ---
+        // --- EXPOSED FUNCTIONS ---
         window.setView = (type) => {
             if (type === 'nexus') {
-                camera.position.set(2000, 4500, 2000);
+                camera.position.set(2000, 5000, 2000);
                 controls.target.set(0, 4000, 0);
             } else {
-                camera.position.set(12000, 8000, 12000);
+                camera.position.set(15000, 10000, 15000);
                 controls.target.set(0, 0, 0);
             }
         };
 
-        window.toggleTour = () => { controls.autoRotate = !controls.autoRotate; };
-        
-        window.triggerOverdrive = () => {
-            overdriveActive = true;
-            setTimeout(() => { overdriveActive = false; }, 4000);
+        window.toggleWeather = () => {
+            isGoldenHour = !isGoldenHour;
+            const btn = document.getElementById('weather-btn');
+            if (isGoldenHour) {
+                scene.background = new THREE.Color(0xff8822);
+                scene.fog.color = new THREE.Color(0xff8822);
+                btn.innerText = "Mode: Golden Hour";
+            } else {
+                scene.background = new THREE.Color(0xd0e8f0);
+                scene.fog.color = new THREE.Color(0xd0e8f0);
+                btn.innerText = "Mode: Clear Day";
+            }
+        };
+
+        window.triggerFlare = () => {
+            flareActive = true;
+            setTimeout(() => { flareActive = false; renderer.toneMappingExposure = 1.0; }, 3000);
         };
 
         function onResize() {
