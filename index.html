@@ -3,80 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEO-BAGHDAD // OMNI-SOVEREIGN</title>
+    <title>NEO-BAGHDAD // V18 OMNI-CONTROL</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400;800&family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #ffcc00; --cyan: #00f2ff; --glass: rgba(0, 5, 10, 0.7); }
+        :root { --gold: #ffcc00; --cyan: #00f2ff; --glass: rgba(0, 5, 10, 0.8); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'JetBrains Mono', monospace; color: #fff; }
-        canvas { display: block; filter: contrast(1.1) brightness(1.05); }
+        canvas { display: block; cursor: crosshair; }
 
-        /* BOOT SEQUENCE */
-        #boot { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1s; }
-        .boot-log { font-size: 10px; color: var(--cyan); text-transform: uppercase; letter-spacing: 2px; height: 150px; overflow: hidden; margin-top: 20px; text-align: center; }
+        /* HUD ELEMENTS */
+        #hud { position: fixed; inset: 0; pointer-events: none; transition: 0.5s; z-index: 10; }
+        #hud.collapsed { opacity: 0; visibility: hidden; }
+        .interactive { pointer-events: auto; }
 
-        /* GHOST HUD */
-        #hud { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-        #hud.active { opacity: 1; }
-        #hud.collapsed { opacity: 0 !important; visibility: hidden; }
+        /* UI PANELS */
+        .glass { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(15px); padding: 20px; border-radius: 4px; }
+        
+        .top-nav { position: absolute; top: 0; width: 100%; height: 60px; display: flex; justify-content: center; align-items: center; gap: 30px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); }
+        .nav-btn { color: rgba(255,255,255,0.5); font-size: 9px; letter-spacing: 2px; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .nav-btn:hover { color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
 
-        .top-nav { position: absolute; top: 0; width: 100%; height: 60px; display: flex; justify-content: center; align-items: center; gap: 35px; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
-        .nav-link { color: rgba(255,255,255,0.4); font-size: 9px; letter-spacing: 3px; cursor: pointer; pointer-events: auto; transition: 0.3s; text-transform: uppercase; }
-        .nav-link:hover { color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
+        .alt-box { position: absolute; bottom: 100px; left: 40px; }
+        .alt-n { font-family: 'Orbitron'; font-size: 48px; font-weight: 900; line-height: 1; }
 
-        .side-stats { position: absolute; top: 80px; left: 30px; font-size: 10px; line-height: 2.2; pointer-events: auto; }
-        .side-stats b { color: var(--cyan); font-weight: 400; }
-
-        .alt-readout { position: absolute; bottom: 40px; left: 40px; }
-        .alt-n { font-family: 'Orbitron'; font-size: 50px; font-weight: 900; line-height: 1; color: #fff; }
-        .alt-label { font-size: 8px; letter-spacing: 3px; color: var(--cyan); }
-
-        #data-slate { 
-            position: absolute; bottom: 40px; right: 40px; width: 340px; 
-            background: var(--glass); border-left: 2px solid var(--gold); padding: 25px;
-            backdrop-filter: blur(15px); opacity: 0; transform: translateX(40px);
-            transition: 0.5s; pointer-events: auto;
-        }
+        #data-slate { position: absolute; bottom: 100px; right: 40px; width: 320px; border-left: 3px solid var(--gold); opacity: 0; transform: translateX(50px); transition: 0.5s; }
         #data-slate.open { opacity: 1; transform: translateX(0); }
-        .node-type { font-size: 8px; color: var(--cyan); letter-spacing: 2px; margin-bottom: 5px; }
-        .node-h { font-family: 'Orbitron'; font-size: 18px; color: var(--gold); margin-bottom: 10px; border-bottom: 1px solid rgba(255,204,0,0.2); padding-bottom: 10px; }
 
-        .master-toggle { position: fixed; top: 20px; right: 20px; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; pointer-events: auto; z-index: 2000; display: flex; align-items: center; justify-content: center; font-size: 10px; border-radius: 50%; color: #fff; }
-        .master-toggle:hover { border-color: var(--cyan); background: var(--cyan); color: #000; }
+        /* COMMAND CONSOLE */
+        .console-wrap { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; display: flex; align-items: center; background: rgba(0,0,0,0.8); border-top: 1px solid rgba(0,242,255,0.2); padding: 0 20px; box-sizing: border-box; }
+        #cmd-input { background: transparent; border: none; color: var(--cyan); font-family: 'JetBrains Mono'; width: 100%; font-size: 14px; outline: none; }
+        #cmd-input::placeholder { color: rgba(0,242,255,0.2); }
+
+        .ui-toggle { position: fixed; top: 20px; right: 20px; width: 35px; height: 35px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 10px; border-radius: 50%; color: #fff; background: rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
-    <div id="boot">
-        <div style="font-family:'Orbitron'; color:var(--gold); font-size:12px; letter-spacing:10px;">NEO-BAGHDAD // OMNI</div>
-        <div id="boot-log" class="boot-log"></div>
-    </div>
-
-    <div class="master-toggle" onclick="toggleHUD()">HUD</div>
+    <button class="ui-toggle interactive" onclick="toggleHUD()">UI</button>
 
     <div id="hud">
         <div class="top-nav">
-            <div class="nav-link" onclick="camTo('orbit')">Satellite</div>
-            <div class="nav-link" onclick="camTo('nexus')">Nexus</div>
-            <div class="nav-link" onclick="toggleSky()">Weather</div>
-            <div class="nav-link" onclick="burst()">Flare</div>
+            <div class="nav-btn interactive" onclick="setCam('orbit')">Satellite</div>
+            <div class="nav-btn interactive" onclick="setCam('nexus')">Nexus Spire</div>
+            <div class="nav-btn interactive" onclick="toggleSky()">Weather</div>
+            <div class="nav-btn interactive" onclick="flareBurst()">Solar Flare</div>
         </div>
 
-        <div class="side-stats">
-            <div>OPERATOR: <b>MATTEO</b></div>
-            <div>STABILITY: <b>100%</b></div>
-            <div>SACRED NODES: <b>12 ACTIVE</b></div>
-            <div>DRONE MESH: <b>8,000</b></div>
-        </div>
-
-        <div class="alt-readout">
-            <div class="alt-label">VERTICAL ALTITUDE</div>
+        <div class="alt-box">
+            <div style="font-size:8px; letter-spacing:3px; color:var(--cyan)">ALTITUDE MSL</div>
             <div class="alt-n" id="alt-txt">0</div>
         </div>
 
-        <div id="data-slate">
-            <div class="node-type" id="node-type">Classification</div>
-            <div class="node-h" id="node-name">Scanning...</div>
-            <div id="node-desc" style="font-size:11px; color:#ccc; line-height:1.7;">Establishing neural link to sector...</div>
+        <div id="data-slate" class="glass">
+            <div id="node-type" style="font-size:8px; color:var(--cyan); margin-bottom:5px;">CLASSIFICATION</div>
+            <div id="node-name" style="font-family:'Orbitron'; font-size:18px; color:var(--gold); margin-bottom:10px;">SCANNING...</div>
+            <div id="node-desc" style="font-size:11px; color:#ccc; line-height:1.6;">Awaiting connection...</div>
+        </div>
+
+        <div class="console-wrap interactive">
+            <span style="color:var(--cyan); margin-right:15px;">❯</span>
+            <input type="text" id="cmd-input" placeholder="ENTER COMMAND... (e.g. /night, /day, /flare, /nexus)" autocomplete="off">
         </div>
     </div>
 
@@ -86,45 +71,18 @@
 
     <script type="module">
         import * as THREE from 'three';
-        import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+        // FIXED OrbitControls Import
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
         let scene, camera, renderer, controls, raycaster, mouse;
-        let cityMesh, droneMesh, droneData = [], sacredNodes = [];
-        let flare = false;
+        let cityMesh, droneMesh, droneData = [], sacredSites = [];
+        let flareActive = false;
 
-        const ENGINE = {
-            res: ["Sovereign Spire", "Aether Monolith", "Zenith Wing", "Obsidian Cell", "Titan Block"],
-            sacred: ["Great Mosque of Al-Mansur", "Cathedral of the Silicon Saint", "Ziggurat of Eternal Data", "Shrine of the Round City", "Sanctuary of Light"],
-            desc: [
-                "Modular habitation unit with 99% solar efficiency.",
-                "Sacred architecture merging ancient geometry with neural light arrays.",
-                "High-density commercial core powering the sector's local grid.",
-                "Spiritual nexus for citizen mediation and data synchronization."
-            ]
+        const NAMES = {
+            res: ["Sovereign Spire", "Zenith Habitation", "Obsidian Unit", "Aether Block", "Titan Wing"],
+            sacred: ["Great Mosque of Al-Mansur", "Cathedral of the Silicon Soul", "Ziggurat of Eternal Data", "Shrine of the Round City", "Sanctuary of Light"],
+            desc: ["High-density neural-sync habitation.", "Spiritual node utilizing holographic arrays.", "Modular commercial grid with 99% solar yield."]
         };
-
-        function boot() {
-            const logs = [
-                "Initializing OMNI-SOVEREIGN...", "Loading 25k structures...", "Restoring 8k Drones...", 
-                "Synching Sacred Rings...", "Identity: MATTEO Verified.", "System Ready."
-            ];
-            const div = document.getElementById('boot-log');
-            logs.forEach((t, i) => {
-                setTimeout(() => {
-                    const p = document.createElement('div');
-                    p.innerText = ">> " + t;
-                    div.appendChild(p);
-                    if(i === logs.length - 1) {
-                        setTimeout(() => {
-                            document.getElementById('boot').style.opacity = '0';
-                            document.getElementById('hud').classList.add('active');
-                            init();
-                        }, 800);
-                    }
-                }, i * 250);
-            });
-        }
-        boot();
 
         function init() {
             scene = new THREE.Scene();
@@ -140,36 +98,35 @@
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             document.body.appendChild(renderer.domElement);
 
+            // OrbitControls Setup
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2.1;
 
             const sun = new THREE.DirectionalLight(0xffffff, 3);
-            sun.position.set(5000, 20000, 5000);
+            sun.position.set(10000, 20000, 10000);
             scene.add(sun);
             scene.add(new THREE.AmbientLight(0xffffff, 1.2));
 
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
-            buildMegaCity();
-            buildDroneSwarm();
+            buildCity();
+            buildDrones();
 
             window.addEventListener('mousedown', onInteract);
             window.addEventListener('mousemove', (e) => {
                 mouse.x = (e.clientX/window.innerWidth)*2-1;
                 mouse.y = -(e.clientY/window.innerHeight)*2+1;
             });
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth/window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
+            window.addEventListener('resize', onResize);
 
+            setupConsole();
             animate();
         }
 
-        function buildMegaCity() {
-            // 25,000 Buildings
+        function buildCity() {
             const count = 25000;
             const geo = new THREE.BoxGeometry(1, 1, 1);
             const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8, roughness: 0.1 });
@@ -181,13 +138,11 @@
                 const angle = Math.random() * Math.PI * 2;
                 const ring = Math.floor(Math.random() * 9);
                 const r = 4000 + (ring * 3500) + (Math.random() * 800);
-                if (Math.abs(angle % (Math.PI/4)) < 0.04) continue; // Radial Roads
+                if (Math.abs(angle % (Math.PI/4)) < 0.04) continue;
 
                 const h = 200 + (Math.random() * 5000 * (1/(ring*0.5+1)));
-                const w = 100 + Math.random() * 100;
-
                 dummy.position.set(Math.cos(angle)*r, h/2, Math.sin(angle)*r);
-                dummy.scale.set(w, h, w);
+                dummy.scale.set(100+Math.random()*100, h, 100+Math.random()*100);
                 dummy.updateMatrix();
                 cityMesh.setMatrixAt(i, dummy.matrix);
                 
@@ -197,35 +152,36 @@
             }
             scene.add(cityMesh);
 
-            // Sacred Sites
+            // Sacred Nodes
             const sGeo = new THREE.CylinderGeometry(400, 500, 1500, 4);
             const sMat = new THREE.MeshStandardMaterial({ color: 0x00f2ff, emissive: 0x00f2ff, emissiveIntensity: 0.5 });
             for(let i=0; i<12; i++) {
                 const ang = (i/12) * Math.PI * 2;
                 const mesh = new THREE.Mesh(sGeo, sMat);
-                mesh.position.set(Math.cos(ang)*11000, 750, Math.sin(ang)*11000);
-                mesh.userData = { type: "SACRED NODE", t: ENGINE.sacred[i % 5], d: ENGINE.desc[1] };
-                sacredNodes.push(mesh);
+                mesh.position.set(Math.cos(ang)*12000, 750, Math.sin(ang)*12000);
+                mesh.userData = { type: "SACRED NODE", t: NAMES.sacred[i % 5], d: NAMES.desc[1] };
+                sacredSites.push(mesh);
                 scene.add(mesh);
             }
 
-            // Nexus Spire
+            // Nexus
             const nGeo = new THREE.CylinderGeometry(50, 400, 12000, 3);
             const nMat = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xffcc00, emissiveIntensity: 0.2 });
             const nexus = new THREE.Mesh(nGeo, nMat);
             nexus.position.y = 6000;
-            nexus.userData = { type: "OMNI-CORE", t: "HOUSE OF WISDOM", d: "The central processing hub of Neo-Baghdad. Auth: MATTEO." };
-            sacredNodes.push(nexus);
+            nexus.userData = { type: "CORE", t: "HOUSE OF WISDOM", d: "Central Hub of Neo-Baghdad." };
+            sacredSites.push(nexus);
             scene.add(nexus);
 
-            scene.add(new THREE.GridHelper(100000, 80, 0x00f2ff, 0x000000));
+            scene.add(new THREE.GridHelper(120000, 100, 0x00f2ff, 0x000000));
         }
 
-        function buildDroneSwarm() {
+        function buildDrones() {
+            const count = 8000;
             const geo = new THREE.BoxGeometry(30, 2, 30);
             const mat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
-            droneMesh = new THREE.InstancedMesh(geo, mat, 8000);
-            for(let i=0; i<8000; i++) {
+            droneMesh = new THREE.InstancedMesh(geo, mat, count);
+            for(let i=0; i<count; i++) {
                 droneData.push({ r: 5000+Math.random()*40000, a: Math.random()*Math.PI*2, s: 0.001+Math.random()*0.003, h: 500+Math.random()*4000 });
             }
             scene.add(droneMesh);
@@ -234,7 +190,7 @@
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
-            
+
             const dummy = new THREE.Object3D();
             droneData.forEach((d, i) => {
                 d.a += d.s;
@@ -244,23 +200,22 @@
             });
             droneMesh.instanceMatrix.needsUpdate = true;
 
-            if(flare) renderer.toneMappingExposure = 2.5 + Math.sin(Date.now()*0.02);
+            if(flareActive) renderer.toneMappingExposure = 2.5 + Math.sin(Date.now()*0.02);
             document.getElementById('alt-txt').innerText = Math.round(camera.position.y);
             renderer.render(scene, camera);
         }
 
         function onInteract() {
             raycaster.setFromCamera(mouse, camera);
-            const hits = raycaster.intersectObjects([...sacredNodes, cityMesh]);
+            const hits = raycaster.intersectObjects([...sacredSites, cityMesh]);
             const slate = document.getElementById('data-slate');
-
             if(hits.length > 0) {
                 const hit = hits[0];
                 if(hit.object.userData.t) {
-                    fillSlate(hit.object.userData.type, hit.object.userData.t, hit.object.userData.d);
+                    fillUI(hit.object.userData.type, hit.object.userData.t, hit.object.userData.d);
                 } else {
                     const id = hit.instanceId;
-                    fillSlate("RESIDENTIAL BLOCK", ENGINE.res[id % 5] + " " + (id % 999), ENGINE.desc[0]);
+                    fillUI("RESIDENTIAL BLOCK", NAMES.res[id % 5] + " " + (id % 999), NAMES.desc[0]);
                 }
                 slate.classList.add('open');
             } else {
@@ -268,15 +223,28 @@
             }
         }
 
-        function fillSlate(type, name, desc) {
+        function fillUI(type, name, desc) {
             document.getElementById('node-type').innerText = type;
             document.getElementById('node-name').innerText = name;
             document.getElementById('node-desc').innerText = desc;
         }
 
-        /* ACTIONS */
+        function setupConsole() {
+            const input = document.getElementById('cmd-input');
+            input.addEventListener('keydown', (e) => {
+                if(e.key === 'Enter') {
+                    const val = input.value.toLowerCase();
+                    if(val === '/night') { scene.background.setHex(0x05080a); scene.fog.color.setHex(0x05080a); }
+                    if(val === '/day') { scene.background.setHex(0xdceef5); scene.fog.color.setHex(0xdceef5); }
+                    if(val === '/flare') flareBurst();
+                    if(val === '/nexus') setCam('nexus');
+                    input.value = '';
+                }
+            });
+        }
+
         window.toggleHUD = () => document.getElementById('hud').classList.toggle('collapsed');
-        window.camTo = (m) => {
+        window.setCam = (m) => {
             if(m === 'nexus') { camera.position.set(3000, 6000, 3000); controls.target.set(0, 5000, 0); }
             else { camera.position.set(18000, 12000, 18000); controls.target.set(0,0,0); }
         };
@@ -285,7 +253,10 @@
             scene.background.setHex(isDay ? 0x05080a : 0xdceef5);
             scene.fog.color.setHex(isDay ? 0x05080a : 0xdceef5);
         };
-        window.burst = () => { flare = true; setTimeout(() => { flare = false; renderer.toneMappingExposure = 1.0; }, 2000); };
+        window.flareBurst = () => { flareActive = true; setTimeout(() => { flareActive = false; renderer.toneMappingExposure = 1.0; }, 2000); };
+        function onResize() { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
+
+        init();
     </script>
 </body>
 </html>
