@@ -2,128 +2,135 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEO-BAGHDAD // MEGA-TITAN EDITION</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;800&family=Orbitron:wght@400;700;900&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATTEO-CORE // COMMAND CENTER</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;800&family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --neon: #00ff9d; --gold: #ffcc00; --alert: #ff3300; --info: #00d4ff;
-            --bg: #010406; --glass: rgba(0, 15, 20, 0.9);
-            --border: 1px solid rgba(0, 255, 157, 0.3);
+            --m-neon: #00f2ff;
+            --m-gold: #ffaa00;
+            --m-bg: #010203;
+            --m-glass: rgba(2, 6, 10, 0.95);
+            --m-border: 1px solid rgba(0, 242, 255, 0.3);
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: var(--bg); color: #fff;
-            font-family: 'JetBrains Mono', monospace;
+            overflow: hidden; background: var(--m-bg);
+            font-family: 'JetBrains Mono', monospace; color: #fff;
         }
 
         canvas { display: block; outline: none; }
 
-        /* --- THE BOOT SEQUENCE TERMINAL --- */
-        #boot-overlay {
+        /* --- THE MATTEO BOOT SEQUENCE --- */
+        #boot-screen {
             position: fixed; inset: 0; background: #000; z-index: 10000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-        .boot-window {
-            width: 90%; max-width: 800px; height: 500px;
+        .terminal-wrap {
+            width: 80%; max-width: 800px; height: 400px;
             background: #050505; border: 1px solid #1a1a1a;
-            padding: 30px; position: relative;
+            padding: 25px; position: relative; overflow: hidden;
         }
-        #boot-text { font-size: 13px; color: var(--neon); height: 100%; overflow: hidden; line-height: 1.6; }
-        .progress-container { width: 100%; height: 2px; background: #111; margin-top: 20px; position: relative; }
-        #progress-fill { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 15px var(--neon); }
+        #boot-log { font-size: 12px; color: var(--m-neon); line-height: 1.5; height: 100%; }
+        .m-loader { width: 100%; height: 2px; background: #111; margin-top: 15px; }
+        #m-bar { width: 0%; height: 100%; background: var(--m-neon); box-shadow: 0 0 10px var(--m-neon); }
 
-        /* --- THE MASTER HUD --- */
+        /* --- MASTER HUD ARCHITECTURE --- */
         #hud { position: fixed; inset: 0; pointer-events: none; z-index: 1000; opacity: 0; transition: 2s; }
-        .panel { position: absolute; background: var(--glass); border: var(--border); padding: 15px; backdrop-filter: blur(15px); pointer-events: auto; }
-
-        /* Top Left: Commander Access */
-        .top-left { top: 20px; left: 20px; width: 350px; }
-        .user-id { font-family: 'Orbitron'; font-weight: 900; color: var(--gold); font-size: 1.2rem; border-bottom: 1px solid #333; margin-bottom: 10px; }
         
-        /* Top Right: Global Telemetry */
-        .top-right { top: 20px; right: 20px; text-align: right; min-width: 200px; }
-        .telemetry-row { display: flex; justify-content: space-between; gap: 20px; font-size: 12px; margin-bottom: 5px; color: #aaa; }
-        .telemetry-val { color: var(--info); font-weight: 800; }
-
-        /* Bottom Left: Navigation & Scale */
-        .bottom-left { bottom: 20px; left: 20px; width: 400px; }
-        .alt-display { font-size: 2rem; font-family: 'Orbitron'; font-weight: 700; color: #fff; }
-
-        /* Bottom Right: Quantum Data Slate */
-        .bottom-right { 
-            bottom: 20px; right: 20px; width: 400px; 
-            transform: translateX(120%); transition: 0.8s cubic-bezier(0.1, 0.9, 0.2, 1);
-        }
-        .bottom-right.active { transform: translateX(0); }
-
-        /* Side Controls: Action Stack */
-        .side-stack { position: absolute; right: 20px; top: 220px; display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
-        .action-btn {
-            background: rgba(0, 255, 157, 0.05); border: 1px solid var(--neon); color: var(--neon);
-            padding: 12px 25px; cursor: pointer; font-size: 10px; font-weight: 800; letter-spacing: 2px;
-            transition: 0.3s; text-transform: uppercase;
-        }
-        .action-btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
-
-        /* Floating Log: Scrolling Feed */
-        #log-feed { 
-            height: 100px; overflow: hidden; font-size: 10px; color: #555; 
-            margin-top: 15px; border-top: 1px dotted #333; padding-top: 10px;
+        .panel { 
+            position: absolute; background: var(--m-glass); border: var(--m-border); 
+            padding: 20px; backdrop-filter: blur(10px); pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        /* Animations */
-        @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
-        .scanline { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(0, 255, 157, 0.1), transparent); height: 10%; animation: scanline 4s linear infinite; pointer-events: none; }
+        /* Top Left: Commander Identity */
+        .id-card { top: 30px; left: 30px; width: 360px; }
+        .id-header { font-family: 'Orbitron'; font-weight: 900; color: var(--m-gold); font-size: 18px; margin-bottom: 10px; border-bottom: 1px solid #333; }
+        .stat-line { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px; color: #999; }
+        .stat-val { color: var(--m-neon); font-weight: 800; }
+
+        /* Top Right: Global Status */
+        .status-card { top: 30px; right: 30px; text-align: right; width: 280px; }
+
+        /* Navigation Matrix (Bottom Left) */
+        .nav-card { bottom: 30px; left: 30px; width: 400px; }
+        .alt-readout { font-size: 40px; font-family: 'Orbitron'; font-weight: 900; color: #fff; margin: 10px 0; }
+
+        /* The Data Slate (Bottom Right) - For building info */
+        .slate { 
+            bottom: 30px; right: 30px; width: 450px; 
+            transform: translateX(120%); transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+        .slate.active { transform: translateX(0); }
+        .scan-bar { width: 100%; height: 2px; background: var(--m-neon); margin: 15px 0; opacity: 0.5; animation: pulse 2s infinite; }
+
+        /* Action Buttons */
+        .controls { position: absolute; right: 30px; top: 220px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
+        .m-btn {
+            background: rgba(0, 242, 255, 0.05); border: 1px solid var(--m-neon); color: var(--m-neon);
+            padding: 15px 25px; font-size: 11px; font-weight: 800; letter-spacing: 2px;
+            cursor: pointer; transition: 0.3s; text-transform: uppercase;
+        }
+        .m-btn:hover { background: var(--m-neon); color: #000; box-shadow: 0 0 20px var(--m-neon); }
+
+        /* Terminal Feed */
+        #feed { height: 80px; overflow: hidden; font-size: 10px; color: #666; margin-top: 15px; border-top: 1px dashed #222; padding-top: 10px; }
+
+        @keyframes pulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div id="boot-overlay">
-        <div style="font-family: 'Cinzel'; font-size: 30px; margin-bottom: 20px; color: #fff;">NEO-BAGHDAD</div>
-        <div class="boot-window">
-            <div id="boot-text"></div>
+    <div id="boot-screen">
+        <div style="font-family: 'Orbitron'; font-size: 28px; margin-bottom: 20px;">MATTEO-CORE INITIALIZATION</div>
+        <div class="terminal-wrap">
+            <div id="boot-log"></div>
         </div>
-        <div class="progress-container" style="width: 800px;"><div id="progress-fill"></div></div>
+        <div class="m-loader" style="width: 80%; max-width: 800px;">
+            <div id="m-bar"></div>
+        </div>
     </div>
 
     <div id="hud">
-        <div class="panel top-left">
-            <div class="user-id">ACCESS: COMMANDER MATTEO</div>
-            <div class="telemetry-row"><span>NEURAL SYNC:</span><span class="telemetry-val">99.98%</span></div>
-            <div class="telemetry-row"><span>GRID STATUS:</span><span class="telemetry-val" style="color: var(--neon);">OPTIMIZED</span></div>
-            <div class="telemetry-row"><span>ENCRYPTION:</span><span class="telemetry-val">LEVEL TITAN</span></div>
-            <div id="log-feed"></div>
+        <div class="panel id-card">
+            <div class="id-header">COMMANDER: MATTEO</div>
+            <div class="stat-line"><span>ACCESS LEVEL:</span><span class="stat-val">SUPREME-ARCHITECT</span></div>
+            <div class="stat-line"><span>SYNC STATUS:</span><span class="stat-val">CRYSTAL CLEAR</span></div>
+            <div class="stat-line"><span>SECTOR:</span><span class="stat-val">NEO-BAGHDAD PRIME</span></div>
+            <div id="feed"></div>
         </div>
 
-        <div class="panel top-right">
-            <div class="telemetry-row"><span>LOCAL TIME:</span><span class="telemetry-val" id="hud-time">00:00:00</span></div>
-            <div class="telemetry-row"><span>POPULATION:</span><span class="telemetry-val">18,421,092</span></div>
-            <div class="telemetry-row"><span>ENERGY GAIN:</span><span class="telemetry-val">42.5 TW</span></div>
-            <div class="telemetry-row"><span>AIR QUALITY:</span><span class="telemetry-val">88%</span></div>
+        <div class="panel status-card">
+            <div class="stat-line"><span>GRID STABILITY:</span><span class="stat-val">100.0%</span></div>
+            <div class="stat-line"><span>CITIZEN COUNT:</span><span class="stat-val">24,501,902</span></div>
+            <div class="stat-line"><span>ENERGY YIELD:</span><span class="stat-val">842.1 PW</span></div>
+            <div class="stat-line"><span>TIME:</span><span class="stat-val" id="m-clock">00:00:00</span></div>
         </div>
 
-        <div class="side-stack">
-            <button class="action-btn" onclick="camGoto('nexus')">Nexus Center</button>
-            <button class="action-btn" onclick="camGoto('orbit')">Satellite Map</button>
-            <button class="action-btn" onclick="toggleAutoRotate()">Auto-Survey</button>
-            <button class="action-btn" onclick="triggerFlare()" style="border-color: var(--alert); color: var(--alert);">Solar Flare</button>
+        <div class="controls">
+            <button class="m-btn" onclick="setView('reset')">Standard Recon</button>
+            <button class="m-btn" onclick="setView('nexus')">Nexus Spire</button>
+            <button class="m-btn" onclick="toggleTour()">Auto-Survey</button>
+            <button class="m-btn" onclick="triggerOverdrive()" style="border-color: var(--m-gold); color: var(--m-gold);">Grid Overdrive</button>
         </div>
 
-        <div class="panel bottom-left">
-            <div class="telemetry-row"><span style="font-size: 10px; letter-spacing: 3px;">TELEMETRY DATA // ALTITUDE</span></div>
-            <div class="alt-display" id="alt-val">0000m</div>
-            <div style="width: 100%; height: 4px; background: #111; margin-top: 10px;"><div id="alt-bar" style="height: 100%; width: 50%; background: var(--gold);"></div></div>
+        <div class="panel nav-card">
+            <div style="font-size: 10px; letter-spacing: 2px; color: #555;">VERTICAL POSITIONING SYSTEM</div>
+            <div class="alt-readout" id="alt-txt">0000m</div>
+            <div style="width: 100%; height: 3px; background: #111;"><div id="alt-fill" style="height: 100%; width: 50%; background: var(--m-neon);"></div></div>
         </div>
 
-        <div id="data-slate" class="panel bottom-right">
-            <div class="scanline"></div>
-            <div class="user-id" id="slate-title" style="font-size: 14px; color: var(--neon);">SCANNING SECTOR...</div>
-            <p id="slate-body" style="font-size: 12px; line-height: 1.6; color: #ccc;">Select a structure to initialize quantum deep-scan.</p>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <div style="flex:1; border:1px solid #333; padding:5px; font-size:9px;">INTEGRITY: 100%</div>
-                <div style="flex:1; border:1px solid #333; padding:5px; font-size:9px;">TYPE: ARCHITECTURAL</div>
+        <div id="m-slate" class="panel slate">
+            <div class="id-header" id="slate-title">SCANNING ARCHITECTURE...</div>
+            <div class="scan-bar"></div>
+            <div id="slate-body" style="font-size: 13px; line-height: 1.7; color: #ccc;">
+                Touch a structure to decrypt its architectural metadata and resource allocation.
+            </div>
+            <div style="display: flex; gap: 15px; margin-top: 20px;">
+                <div style="flex:1; border: 1px solid #333; padding: 10px; font-size: 10px;">ID: VERIFIED</div>
+                <div style="flex:1; border: 1px solid #333; padding: 10px; font-size: 10px;">AUTH: MATTEO</div>
             </div>
         </div>
     </div>
@@ -137,153 +144,160 @@
         import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
         /* --------------------------------------------------------------------
-            1. INITIAL CONFIGURATION & SYSTEM STATE
+            1. SYSTEM CONSTANTS & LORE DATA
             --------------------------------------------------------------------
         */
         let scene, camera, renderer, controls, raycaster, mouse;
-        let districts = [], trafficSystem, starField, cloudSystem;
-        let flareMode = false, isAutoRotate = false;
+        let trafficMesh, cityGroups = [];
+        let overdriveActive = false;
         
-        const LORE = [
-            { t: "THE HOUSE OF WISDOM", d: "A 4.2km spire housing the Great Digital Library. It contains the collective knowledge of the vertical era." },
-            { t: "RESIDENTIAL MONOLITH SEC-A", d: "High-density habitation node. Optimized for carbon-scrubbing and solar efficiency. Home to 200,000 citizens." },
-            { t: "INDUSTRIAL CORE 09", d: "Deep-earth geothermal extractor and manufacturing plant. Powers the southern residential rings." },
-            { t: "CRYSTAL BIO-GARDEN", d: "Self-sustaining ecosystem dome. Provides 15% of the city's oxygen and vertical agricultural yield." },
-            { t: "NEURAL TRANSIT HUB", d: "Central node for the drone swarm network. Handles 50,000 traffic events per millisecond." }
-        ];
+        const CITY_LORE = {
+            spire: { t: "THE MATTEO NEXUS", d: "The sovereign central processor. It manages the entire city's data flow and atmosphere scrubbing. Height: 5,200m." },
+            resident: { t: "HABITATION MONOLITH", d: "A vertical district optimized for 500,000 citizens. Equipped with integrated solar-refractive glass and hydro-recycling." },
+            industrial: { t: "FUSION FOUNDRY", d: "A high-output energy plant utilizing cold-fusion technology to power the outer residential rings." },
+            archive: { t: "KNOWLEDGE SILO", d: "A hardened storage facility housing the digital history of Neo-Baghdad. Protected by Level-10 encryption." }
+        };
 
         /* --------------------------------------------------------------------
-            2. THE BOOTLOADER LOGIC
+            2. THE BOOTLOADER SEQUENCE (MATTEO VERSION)
             --------------------------------------------------------------------
         */
-        const bootBox = document.getElementById('boot-text');
-        const bootLines = [
-            "0x00: INITIALIZING SQUIDLY KERNEL...",
-            "0x04: VERIFYING USER: MATTEO...",
-            "0x09: USER ACCESS LEVEL: SOVEREIGN",
-            "0x12: MAPPING CIRCULAR SECTOR ARRAYS...",
-            "0x24: DEPLOYING 12,000 ARCHITECTURAL INSTANCES...",
-            "0x38: SYNCHRONIZING TRAFFIC SWARM [2,000 UNITS]...",
-            "0x42: ESTABLISHING QUANTUM HUD LINK...",
-            "0x55: LOADING CRYSTAL BIOMES...",
-            "0x70: CALIBRATING ATMOSPHERIC AETHER...",
-            "0x88: BYPASSING ENCRYPTION GATES...",
-            "0x99: SYSTEM LIVE. WELCOME, COMMANDER MATTEO."
+        const logContainer = document.getElementById('boot-log');
+        const bootMessages = [
+            ">> MATTEO-CORE V10.4 BOOTING...",
+            ">> CHECKING USER PRIVILEGES: COMMANDER MATTEO DETECTED.",
+            ">> CLEARING OBSCURE GEOMETRY ARRAYS...",
+            ">> REMOVING BUBBLE-SHIELD OVERLAYS...",
+            ">> SYNCHRONIZING 25,000 ARCHITECTURAL UNITS...",
+            ">> DEPLOYING TRAFFIC GRID [5,000 DRONES]...",
+            ">> CALIBRATING NEON ATMOSPHERE...",
+            ">> SECURING GRID INTEGRITY...",
+            ">> READY. WELCOME TO YOUR CITY, MATTEO."
         ];
 
-        let lineIdx = 0;
+        let msgIdx = 0;
         function runBoot() {
-            if (lineIdx < bootLines.length) {
-                const p = document.createElement('div');
-                p.textContent = bootLines[lineIdx];
-                bootBox.appendChild(p);
-                document.getElementById('progress-fill').style.width = ((lineIdx+1) / bootLines.length * 100) + "%";
-                lineIdx++;
-                setTimeout(runBoot, 150 + Math.random() * 300);
+            if (msgIdx < bootMessages.length) {
+                const line = document.createElement('div');
+                line.textContent = bootMessages[msgIdx];
+                logContainer.appendChild(line);
+                document.getElementById('m-bar').style.width = ((msgIdx + 1) / bootMessages.length * 100) + "%";
+                msgIdx++;
+                setTimeout(runBoot, 200 + Math.random() * 300);
             } else {
-                setTimeout(initWorld, 1000);
+                setTimeout(startMatteoEngine, 800);
             }
         }
         runBoot();
 
         /* --------------------------------------------------------------------
-            3. SCENE INITIALIZATION
+            3. SCENE INITIALIZATION (NO BUBBLES)
             --------------------------------------------------------------------
         */
-        function initWorld() {
-            document.getElementById('boot-overlay').style.opacity = '0';
+        function startMatteoEngine() {
+            document.getElementById('boot-screen').style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('boot-overlay').remove();
+                document.getElementById('boot-screen').remove();
                 document.getElementById('hud').style.opacity = '1';
-                setupEngine();
+                initThree();
             }, 1000);
         }
 
-        function setupEngine() {
+        function initThree() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x020508);
-            scene.fog = new THREE.FogExp2(0x020508, 0.00008);
+            scene.background = new THREE.Color(0x010305);
+            scene.fog = new THREE.FogExp2(0x010305, 0.00008);
 
-            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 10, 200000);
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 10, 150000);
             camera.position.set(10000, 6000, 10000);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             document.body.appendChild(renderer.domElement);
 
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.maxPolarAngle = Math.PI / 2.1;
-            controls.minDistance = 200;
-            controls.maxDistance = 60000;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2.02; // Horizon lock
+            controls.minDistance = 100;
+            controls.maxDistance = 80000;
+
+            // Lights
+            const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+            sun.position.set(5000, 10000, 5000);
+            scene.add(sun);
+            scene.add(new THREE.AmbientLight(0x1a2a4a, 1.2));
 
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
-            // Lighting System
-            const sun = new THREE.DirectionalLight(0xffffff, 3);
-            sun.position.set(5000, 10000, 2000);
-            scene.add(sun);
-            scene.add(new THREE.AmbientLight(0x1a2a4a, 1.5));
+            // Construction
+            buildGroundGrid();
+            buildNexusCenter();
+            buildResidentialDistricts();
+            buildIndustrialSectors();
+            buildTrafficGrid();
 
-            buildMetropolis();
-            createEnvironment();
-            
             window.addEventListener('resize', onResize);
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mousedown', onSelect);
+            window.addEventListener('mousemove', (e) => { mouse.x = (e.clientX/window.innerWidth)*2-1; mouse.y = -(e.clientY/window.innerHeight)*2+1; });
+            window.addEventListener('mousedown', onInteract);
             
             animate();
-            setInterval(updateLogs, 2000);
-            setInterval(() => {
-                const now = new Date();
-                document.getElementById('hud-time').innerText = now.toTimeString().split(' ')[0];
-            }, 1000);
+            setInterval(updateClock, 1000);
+            setInterval(pushLog, 2500);
         }
 
         /* --------------------------------------------------------------------
-            4. PROCEDURAL CONSTRUCTION
+            4. CLEAN PROCEDURAL CONSTRUCTION
             --------------------------------------------------------------------
         */
-        function buildMetropolis() {
-            // 1. The Central Nexus (Complex Spire)
-            const nexusGroup = new THREE.Group();
-            const towerGeo = new THREE.CylinderGeometry(50, 300, 4200, 12);
-            const towerMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 1, roughness: 0.1 });
-            const spire = new THREE.Mesh(towerGeo, towerMat);
-            spire.position.y = 2100;
-            spire.userData = LORE[0];
-            nexusGroup.add(spire);
-
-            // Rotating Logic Rings
-            for(let i=0; i<4; i++) {
-                const ring = new THREE.Mesh(
-                    new THREE.TorusGeometry(600 + i*200, 15, 16, 100),
-                    new THREE.MeshBasicMaterial({ color: 0x00ff9d, transparent: true, opacity: 0.4 })
-                );
-                ring.rotation.x = Math.PI/2;
-                ring.position.y = 1000 + i*800;
-                nexusGroup.add(ring);
-            }
-            scene.add(nexusGroup);
-
-            // 2. District Clusters (Using InstancedMesh for "Loads")
-            // Residential
-            createDistrict(2000, 7000, 10000, 0xcccccc, 1.0); 
-            // Industrial
-            createDistrict(8000, 12000, 4000, 0x884422, 0.4);
-            // Bio-Domes
-            createDistrict(13000, 15000, 500, 0x00d4ff, 0.1, true); 
-
-            // 3. Traffic Swarm
-            createTraffic(3000);
+        function buildGroundGrid() {
+            const grid = new THREE.GridHelper(100000, 100, 0x00f2ff, 0x05151a);
+            grid.material.opacity = 0.15;
+            grid.material.transparent = true;
+            scene.add(grid);
         }
 
-        function createDistrict(inner, outer, count, colorHex, heightMult, isDome = false) {
-            const geo = isDome ? new THREE.SphereGeometry(100, 16, 16) : new THREE.BoxGeometry(1, 1, 1);
-            const mat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.7, roughness: 0.2 });
+        function buildNexusCenter() {
+            // The Main Spire (Matteo's Throne)
+            const g = new THREE.Group();
+            
+            // Core Pillar
+            const pillarGeo = new THREE.CylinderGeometry(80, 250, 5200, 8);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 });
+            const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar.position.y = 2600;
+            pillar.userData = CITY_LORE.spire;
+            g.add(pillar);
+
+            // Tech Fins
+            for(let i=0; i<4; i++) {
+                const finGeo = new THREE.BoxGeometry(20, 3000, 400);
+                const fin = new THREE.Mesh(finGeo, pillarMat);
+                fin.position.y = 2000;
+                fin.rotation.y = (Math.PI / 2) * i;
+                fin.position.x = Math.cos(fin.rotation.y) * 200;
+                fin.position.z = Math.sin(fin.rotation.y) * 200;
+                g.add(fin);
+            }
+
+            // Energy Crown (No massive bubble!)
+            const crownGeo = new THREE.TorusGeometry(350, 10, 16, 100);
+            const crownMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
+            const crown = new THREE.Mesh(crownGeo, crownMat);
+            crown.rotation.x = Math.PI/2;
+            crown.position.y = 4800;
+            g.add(crown);
+
+            scene.add(g);
+        }
+
+        function buildResidentialDistricts() {
+            const count = 15000;
+            const geo = new THREE.BoxGeometry(1, 1, 1);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8, roughness: 0.2 });
             const mesh = new THREE.InstancedMesh(geo, mat, count);
             
             const dummy = new THREE.Object3D();
@@ -291,140 +305,138 @@
 
             for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const r = inner + Math.random() * (outer - inner);
+                const r = 3000 + Math.random() * 12000;
                 
-                // Clear the main cross-avenues
-                if (Math.abs(angle % (Math.PI / 2)) < 0.08) continue;
+                // Keep the cross-roads clear
+                if (Math.abs(angle % (Math.PI / 2)) < 0.05) continue;
 
-                const h = (100 + Math.random() * 2000) * heightMult;
-                const w = 40 + Math.random() * 80;
+                const h = 200 + Math.random() * 2500;
+                const w = 60 + Math.random() * 100;
 
-                dummy.position.set(Math.cos(angle)*r, isDome ? 50 : h/2, Math.sin(angle)*r);
+                dummy.position.set(Math.cos(angle) * r, h/2, Math.sin(angle) * r);
+                dummy.scale.set(w, h, w);
+                dummy.updateMatrix();
+                mesh.setMatrixAt(i, dummy.matrix);
+
+                // Occasional Neon building
+                if (Math.random() > 0.95) color.setHex(0x00f2ff);
+                else color.setHex(0x333333);
+                mesh.setColorAt(i, color);
+            }
+            scene.add(mesh);
+            cityGroups.push(mesh);
+        }
+
+        function buildIndustrialSectors() {
+            const count = 3000;
+            const geo = new THREE.BoxGeometry(1, 1, 1);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.5 });
+            const mesh = new THREE.InstancedMesh(geo, mat, count);
+            
+            const dummy = new THREE.Object3D();
+
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const r = 18000 + Math.random() * 5000;
+                
+                const h = 400 + Math.random() * 800;
+                const w = 200 + Math.random() * 400;
+
+                dummy.position.set(Math.cos(angle) * r, h/2, Math.sin(angle) * r);
                 dummy.scale.set(w, h, w);
                 dummy.rotation.y = angle;
                 dummy.updateMatrix();
                 mesh.setMatrixAt(i, dummy.matrix);
-
-                if (Math.random() > 0.9) color.setHex(0x00ff9d);
-                else color.setHex(colorHex);
-                mesh.setColorAt(i, color);
             }
             scene.add(mesh);
-            districts.push(mesh);
+            cityGroups.push(mesh);
         }
 
-        function createTraffic(count) {
-            const geo = new THREE.BoxGeometry(15, 5, 40);
-            const mat = new THREE.MeshBasicMaterial({ color: 0x00ff9d });
-            trafficSystem = new THREE.InstancedMesh(geo, mat, count);
+        function buildTrafficGrid() {
+            const count = 5000;
+            const geo = new THREE.BoxGeometry(20, 6, 40);
+            const mat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
+            trafficMesh = new THREE.InstancedMesh(geo, mat, count);
             
-            const routes = [];
+            const data = [];
             const dummy = new THREE.Object3D();
 
-            for (let i = 0; i < count; i++) {
-                const r = 2500 + Math.random() * 15000;
+            for(let i=0; i<count; i++) {
+                const r = 2500 + Math.random() * 20000;
+                const speed = 0.001 + Math.random() * 0.004;
                 const angle = Math.random() * Math.PI * 2;
-                const speed = 0.001 + Math.random() * 0.003;
-                const altitude = 400 + Math.random() * 2000;
-                
-                routes.push({ r, angle, speed, altitude });
-                dummy.position.set(Math.cos(angle)*r, altitude, Math.sin(angle)*r);
+                const alt = 400 + Math.random() * 3000;
+
+                data.push({ r, speed, angle, alt });
+                dummy.position.set(Math.cos(angle)*r, alt, Math.sin(angle)*r);
                 dummy.updateMatrix();
-                trafficSystem.setMatrixAt(i, dummy.matrix);
+                trafficMesh.setMatrixAt(i, dummy.matrix);
             }
-            trafficSystem.userData = routes;
-            scene.add(trafficSystem);
-        }
-
-        function createEnvironment() {
-            // Starfield
-            const starGeo = new THREE.BufferGeometry();
-            const starPos = [];
-            for(let i=0; i<15000; i++) {
-                starPos.push((Math.random()-0.5)*100000, Math.random()*50000, (Math.random()-0.5)*100000);
-            }
-            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-            starField = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 15 }));
-            scene.add(starField);
-
-            // Aether Particles (Floating Dust/Energy)
-            const cloudGeo = new THREE.BufferGeometry();
-            const cloudPos = [];
-            for(let i=0; i<5000; i++) {
-                cloudPos.push((Math.random()-0.5)*40000, Math.random()*5000, (Math.random()-0.5)*40000);
-            }
-            cloudGeo.setAttribute('position', new THREE.Float32BufferAttribute(cloudPos, 3));
-            cloudSystem = new THREE.Points(cloudGeo, new THREE.PointsMaterial({ color: 0x00ff9d, size: 5, transparent: true, opacity: 0.2 }));
-            scene.add(cloudSystem);
-            
-            // Ground Grid
-            const grid = new THREE.GridHelper(60000, 100, 0x00ff9d, 0x05151a);
-            grid.material.opacity = 0.15;
-            grid.material.transparent = true;
-            scene.add(grid);
+            trafficMesh.userData = data;
+            scene.add(trafficMesh);
         }
 
         /* --------------------------------------------------------------------
-            5. ANIMATION & INTERACTION
+            5. ANIMATION & ENGINE LOGIC
             --------------------------------------------------------------------
         */
         function animate() {
             requestAnimationFrame(animate);
             const time = Date.now() * 0.001;
 
-            // Rotate Environment
-            starField.rotation.y += 0.0001;
-            cloudSystem.rotation.y -= 0.0002;
-
             // Animate Traffic
-            const tData = trafficSystem.userData;
+            const tData = trafficMesh.userData;
             const dummy = new THREE.Object3D();
-            for (let i = 0; i < tData.length; i++) {
+            for(let i=0; i<tData.length; i++) {
                 const d = tData[i];
-                d.angle += d.speed;
-                dummy.position.set(Math.cos(d.angle)*d.r, d.altitude, Math.sin(d.angle)*d.r);
+                d.angle += overdriveActive ? d.speed * 5 : d.speed;
+                dummy.position.set(Math.cos(d.angle)*d.r, d.alt, Math.sin(d.angle)*d.r);
                 dummy.rotation.y = -d.angle;
                 dummy.updateMatrix();
-                trafficSystem.setMatrixAt(i, dummy.matrix);
+                trafficMesh.setMatrixAt(i, dummy.matrix);
             }
-            trafficSystem.instanceMatrix.needsUpdate = true;
+            trafficMesh.instanceMatrix.needsUpdate = true;
 
-            // Update Telemetry
-            const alt = Math.round(camera.position.y);
-            document.getElementById('alt-val').innerText = alt + "m";
-            document.getElementById('alt-bar').style.width = Math.min(100, (alt/40000)*100) + "%";
+            // HUD Data
+            const altitude = Math.round(camera.position.y);
+            document.getElementById('alt-txt').innerText = altitude + "m";
+            document.getElementById('alt-fill').style.width = Math.min(100, (altitude / 30000) * 100) + "%";
 
-            // Flare Effect
-            if(flareMode) {
-                scene.background.lerp(new THREE.Color(0xff2200), 0.1);
-                renderer.toneMappingExposure = 2.5 + Math.sin(time*10);
+            // Post-Processing Overdrive
+            if (overdriveActive) {
+                renderer.toneMappingExposure = 1.5 + Math.sin(time * 20) * 0.2;
+                scene.fog.density = 0.0002;
             } else {
-                scene.background.lerp(new THREE.Color(0x020508), 0.05);
                 renderer.toneMappingExposure = 1.0;
+                scene.fog.density = 0.00008;
             }
 
             controls.update();
             renderer.render(scene, camera);
         }
 
-        function onSelect(e) {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        /* --------------------------------------------------------------------
+            6. INTERACTION & UTILITIES
+            --------------------------------------------------------------------
+        */
+        function onInteract(e) {
             raycaster.setFromCamera(mouse, camera);
-
-            const slate = document.getElementById('data-slate');
             const hits = raycaster.intersectObjects(scene.children, true);
-            
+            const slate = document.getElementById('m-slate');
+
             if (hits.length > 0) {
-                let obj = hits[0].object;
+                const obj = hits[0].object;
+                
                 if (obj.userData.t) {
+                    // Nexus Click
                     document.getElementById('slate-title').innerText = obj.userData.t;
                     document.getElementById('slate-body').innerText = obj.userData.d;
                     slate.classList.add('active');
-                } else if (obj.isInstancedMesh && obj !== trafficSystem) {
+                } else if (obj.isInstancedMesh && obj !== trafficMesh) {
+                    // City Block Click
                     const id = hits[0].instanceId;
-                    document.getElementById('slate-title').innerText = "UNIT ID: #" + (id + 1000);
-                    document.getElementById('slate-body').innerText = LORE[1].d;
+                    document.getElementById('slate-title').innerText = "BLOCK #" + (id + 5000);
+                    document.getElementById('slate-body').innerText = CITY_LORE.resident.d;
                     slate.classList.add('active');
                 }
             } else {
@@ -432,40 +444,48 @@
             }
         }
 
-        function updateLogs() {
-            const feed = document.getElementById('log-feed');
+        function pushLog() {
+            const feed = document.getElementById('feed');
             const msgs = [
-                ">> SECTOR 4: ENERGY SPIKE DETECTED", ">> DRONE #812: DOCKING COMPLETE",
-                ">> ATMOSPHERIC PURGE: SUCCESSFUL", ">> ARCHIVE QUERY: MATTEO ACCESS GRANTED",
-                ">> TRAFFIC FLOW: OPTIMAL", ">> WARNING: SOLAR WINDS INCREASING"
+                ">> SECTOR 7: POWER FLOW NOMINAL", ">> DATA PACKET 902 RECEIVED",
+                ">> COMMANDER MATTEO: AUTH CONFIRMED", ">> ATMOSPHERIC QUALITY: 99.4%",
+                ">> DRONE GRID: OPTIMIZED", ">> ALERT: SOLAR WIND DEFLECTED"
             ];
             const div = document.createElement('div');
-            div.innerText = msgs[Math.floor(Math.random()*msgs.length)];
+            div.innerText = msgs[Math.floor(Math.random() * msgs.length)];
             feed.prepend(div);
-            if(feed.children.length > 6) feed.lastChild.remove();
+            if (feed.children.length > 5) feed.lastChild.remove();
         }
 
-        // --- GLOBAL RE-CON HOOKS ---
-        window.camGoto = (loc) => {
-            if(loc === 'nexus') {
-                camera.position.set(3000, 3000, 3000);
-                controls.target.set(0, 1500, 0);
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('m-clock').innerText = now.toTimeString().split(' ')[0];
+        }
+
+        // --- EXPOSED COMMANDS ---
+        window.setView = (type) => {
+            if (type === 'nexus') {
+                camera.position.set(2000, 4500, 2000);
+                controls.target.set(0, 4000, 0);
             } else {
-                camera.position.set(20000, 15000, 20000);
+                camera.position.set(12000, 8000, 12000);
                 controls.target.set(0, 0, 0);
             }
         };
-        window.toggleAutoRotate = () => { controls.autoRotate = !controls.autoRotate; };
-        window.triggerFlare = () => {
-            flareMode = true;
-            setTimeout(() => flareMode = false, 3500);
+
+        window.toggleTour = () => { controls.autoRotate = !controls.autoRotate; };
+        
+        window.triggerOverdrive = () => {
+            overdriveActive = true;
+            setTimeout(() => { overdriveActive = false; }, 4000);
         };
-        function onMouseMove(e) { mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1; }
-        function onResize() { 
-            camera.aspect = window.innerWidth / window.innerHeight; 
-            camera.updateProjectionMatrix(); 
-            renderer.setSize(window.innerWidth, window.innerHeight); 
+
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
+
     </script>
 </body>
 </html>
